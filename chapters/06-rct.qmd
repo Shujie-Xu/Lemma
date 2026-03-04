@@ -81,31 +81,22 @@ where $s_T^2$ and $s_C^2$ are the sample variances in the treatment and control 
 
 Knowing that randomization identifies the ATE is not enough. *How* you randomize---at what level, with what structure---determines precision, validity, and the estimand itself. The decision tree below summarizes the main choices:
 
-```
-Can units be independently randomized?
-│
-├─ NO (treatment is group-level or spillovers within groups)
-│  → Cluster Randomization
-│
-└─ YES
-   │
-   ├─ Large sample (N > several hundred)?
-   │  → Simple Randomization
-   │    (LLN ensures approximate balance)
-   │
-   └─ Small sample (random imbalance is a concern)
-      │
-      ├─ Key discrete covariates to balance?
-      │  → Stratified Randomization
-      │    (block on covariates, randomize within strata)
-      │
-      └─ Key continuous covariates, or need maximum precision?
-         → Pairwise Matching
-           (pair similar units, randomize one to treatment)
+```{mermaid}
+%%| fig-cap: "Randomization Design Decision Tree"
+flowchart TD
+    A["Can units be independently randomized?"] --> |NO| B["<b>Cluster Randomization</b><br/><i>treatment is group-level<br/>or spillovers within groups</i>"]
+    A --> |YES| C{"Sample size?"}
+    C --> |"Large (N > hundreds)"| D["<b>Simple Randomization</b><br/><i>LLN ensures approximate balance</i>"]
+    C --> |"Small (imbalance risk)"| E{"Covariate type?"}
+    E --> |"Key discrete covariates"| F["<b>Stratified Randomization</b><br/><i>block on covariates,<br/>randomize within strata</i>"]
+    E --> |"Continuous covariates /<br/>need max precision"| G["<b>Pairwise Matching</b><br/><i>pair similar units,<br/>randomize within pairs</i>"]
+    A --> |"Cannot permanently<br/>deny treatment"| H["<b>Phase-In (Stepped Wedge)</b><br/><i>all units eventually treated;<br/>randomize the timing</i>"]
 
-Ethical / operational constraint — cannot permanently deny treatment?
-→ Phase-In (Stepped Wedge) Design
-  (all units eventually treated; randomize the timing)
+    style B fill:#e8f4e8,stroke:#4f9a68
+    style D fill:#e8f0f8,stroke:#4a7fb5
+    style F fill:#fef3e0,stroke:#d4a24c
+    style G fill:#fce8e8,stroke:#b55d5d
+    style H fill:#f0e8f8,stroke:#7b61a8
 ```
 
 ### Unit of Randomization {#sec-rct-unit}
