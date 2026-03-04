@@ -77,6 +77,98 @@ where $s_T^2$ and $s_C^2$ are the sample variances in the treatment and control 
 
 ---
 
+## Experimental Design {#sec-rct-design}
+
+Knowing that randomization identifies the ATE is not enough. *How* you randomize---at what level, with what structure---determines precision, validity, and the estimand itself.
+
+### Unit of Randomization {#sec-rct-unit}
+
+**Individual-level randomization** assigns each person (or firm, or plot) independently. Every unit is its own observation, so statistical power is maximized. The risk is *spillovers*: if treated and control individuals interact (classmates, neighbors, coworkers), SUTVA breaks and the treatment-control contrast is contaminated.
+
+**Cluster-level randomization** assigns entire groups---villages, schools, clinics---to treatment or control. This avoids within-cluster spillovers by design, but introduces the intra-cluster correlation (ICC) problem: units in the same cluster tend to have similar outcomes, so each additional individual within a cluster adds less information than an independent draw. The effective sample size shrinks by the design effect $\text{DEFF} = 1 + (m-1)\rho$ (see [Power Analysis](#sec-rct-power-cluster)).
+
+**Choosing the unit:** Randomize at the level where the treatment operates or below which spillovers are expected. A village-level water system requires village-level randomization. An individual cash transfer with likely intra-household sharing may require household-level randomization.
+
+### Randomization Methods {#sec-rct-randomization-methods}
+
+#### Simple (Pure) Randomization {#sec-rct-simple}
+
+Each unit is independently assigned to treatment with fixed probability $p$:
+
+$$
+D_i \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p). \tag{6.14}
+$$
+
+Transparent and easy to verify. The drawback is that group sizes are random ($n_T \sim \text{Binomial}(N, p)$), and in small samples covariate imbalance can occur by chance. Appropriate when $N$ is large (say $N > 500$) and balance is not a primary concern.
+
+#### Stratified Randomization (Blocking) {#sec-rct-stratified}
+
+Divide the sample into $S$ strata based on pre-treatment covariates (e.g., gender $\times$ region), then randomize independently within each stratum:
+
+$$
+D_i \mid \text{Stratum}_s \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p_s). \tag{6.15}
+$$
+
+This guarantees exact balance on the stratification variables and reduces the variance of $\hat{\tau}$. If the stratification covariates explain a fraction $R_S^2$ of the outcome variance, the precision gain is equivalent to multiplying the sample by $1/(1-R_S^2)$.
+
+Bruhn and McKenzie (2009) show that stratification rarely hurts and often reduces standard errors by $20$--$30\%$. Best practice: stratify on $2$--$3$ variables most correlated with the outcome. Analysis should include strata fixed effects for valid inference (Freedman, 2008).
+
+::: {.callout-warning}
+## Too Many Strata
+
+With too many strata relative to sample size, some strata end up with very few units, defeating the purpose. A stratum with a single unit cannot be randomized at all. Keep the number of strata well below $N/4$.
+:::
+
+#### Pairwise Matching {#sec-rct-pairwise}
+
+An extreme version of stratification: form pairs of units with similar baseline characteristics, then flip a coin within each pair. One unit gets treatment, the other gets control.
+
+This maximizes balance and precision for a given $N$, but is fragile: if one unit in a pair attrites, the entire pair is lost. Analysis must include pair fixed effects. Most useful with very small samples (e.g., $20$ clusters) and rich baseline data.
+
+#### Cluster Randomization {#sec-rct-cluster-design}
+
+Randomize groups rather than individuals. Necessary when:
+
+- Treatment is inherently group-level (school curriculum, village infrastructure)
+- Within-group spillovers would contaminate individual-level randomization
+- Administrative or ethical constraints require group-level assignment
+
+The cost is substantial: with $J$ clusters of size $m$ and ICC $\rho$, the effective sample size is only $Jm / [1+(m-1)\rho]$. With fixed budget, increasing the number of clusters is almost always more effective than increasing cluster size. See [Power Analysis](#sec-rct-power-cluster) for formulas.
+
+#### Phase-In (Stepped Wedge) Design {#sec-rct-phasein}
+
+All units eventually receive treatment; only the *timing* is randomized. Early recipients serve as treatment, later recipients as control. Ethically appealing because no one is permanently denied the intervention, and politically feasible when the implementing organization plans to scale anyway.
+
+Limitations: cannot estimate long-run effects (the control group eventually becomes treated), and anticipation effects may bias short-run estimates. Time trends must be handled carefully---the design is vulnerable to confounding from secular changes.
+
+#### Encouragement Design {#sec-rct-encouragement}
+
+When mandating treatment is unethical or infeasible, randomize an *encouragement*---an information campaign, a subsidy, an invitation---and use it as an instrument for actual treatment take-up.
+
+The randomized encouragement $Z_i$ satisfies the instrument conditions by construction: it is randomly assigned (relevance depends on the encouragement being effective) and plausibly affects outcomes only through take-up (exclusion). The Wald estimator then recovers the LATE for compliers. See [Non-Compliance](#sec-rct-compliance) and [Instrumental Variables](03-iv.qmd).
+
+#### Factorial Design {#sec-rct-factorial}
+
+Cross multiple treatments to test interactions. With two binary treatments $A$ and $B$, four groups arise: pure control, $A$ only, $B$ only, $A + B$.
+
+$$
+Y_i = \alpha + \beta_A A_i + \beta_B B_i + \gamma (A_i \times B_i) + \varepsilon_i. \tag{6.16}
+$$
+
+The interaction term $\gamma$ tests whether $A$ and $B$ are complements ($\gamma > 0$) or substitutes ($\gamma < 0$). Power for $\gamma$ is typically low---detecting an interaction requires roughly four times the sample needed for a main effect.
+
+### Balance Checks {#sec-rct-balance}
+
+After randomization, report a balance table comparing baseline covariates across treatment and control. Standard practice:
+
+- $t$-tests for each covariate separately
+- An $F$-test (joint test): regress $D_i$ on all baseline covariates and test joint significance
+- Normalized differences (Imbens and Rubin, 2015): more informative than $t$-tests in large samples where even trivial imbalances become "significant"
+
+If imbalance is found: do *not* re-randomize until balance is achieved (this invalidates inference). Instead, include the imbalanced covariates as controls in the analysis and report the balance table transparently. With $20$ covariates tested at the $5\%$ level, expect one spurious "significant" difference by chance.
+
+---
+
 ## Estimation Strategies {#sec-rct-estimation}
 
 ### Difference in Means via Regression {#sec-rct-regression}
@@ -290,24 +382,6 @@ For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any
 3. **Stratified randomization** on variables correlated with the outcome
 4. **Multiple follow-up rounds** for panel-data designs
 5. **More precise outcome measures** (administrative data over self-reports)
-
----
-
-## Experimental Design Choices {#sec-rct-design}
-
-### Randomization Methods {#sec-rct-randomization-methods}
-
-**Simple randomization** assigns each unit independently with fixed probability. Transparent and valid, but can produce covariate imbalance in small samples.
-
-**Stratified randomization** divides units into strata based on pre-treatment covariates, then randomizes within each stratum. This guarantees balance on stratification variables and can reduce variance by $20$--$30\%$ or more when the stratification variables predict the outcome. Bruhn and McKenzie (2009) show it rarely hurts and often substantially helps. Analysis should include strata fixed effects.
-
-**Pairwise matching** is the extreme case: create pairs of similar units, randomize one to treatment within each pair. Maximum precision for a given sample size, but loss of one unit in a pair loses the entire pair.
-
-### Phase-In and Encouragement Designs {#sec-rct-alternative-designs}
-
-**Phase-in (stepped wedge)**: All units eventually receive treatment; randomize the *order*. Ethically appealing and politically feasible, but precludes long-run untreated comparisons and is susceptible to anticipation effects.
-
-**Encouragement design**: When mandating treatment is unethical or infeasible, randomize an *encouragement* (information, subsidy, invitation) and use it as an instrument for actual take-up. Estimates LATE for compliers, not ATE for the full population (see [Instrumental Variables](03-iv.qmd) for the IV framework).
 
 ---
 
