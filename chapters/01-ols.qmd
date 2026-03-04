@@ -1,0 +1,484 @@
+---
+title: "OLS Foundations"
+description: "Model setup, normal equations, unbiasedness, Gauss-Markov theorem, and variance estimation."
+---
+
+## Motivation {#sec-ols-motivation}
+
+Suppose you observe a collection of outcomes and want to understand how they relate to a set of covariates. The relationship is unlikely to be exact---there is noise, omitted variation, measurement error. You need a method that produces the "best" linear approximation to that relationship, one that is easy to compute, easy to interpret, and whose statistical properties are well understood.
+
+Ordinary Least Squares is that method. It has been the workhorse of empirical economics for over a century, not because it is the most sophisticated estimator available, but because its properties are transparent. When the assumptions hold, OLS is unbiased, consistent, and efficient among all linear unbiased estimators. When the assumptions fail, OLS remains the benchmark against which other estimators are measured---and the nature of its failure tells you exactly what alternative to reach for.
+
+This chapter builds OLS from first principles. We start with the linear model, state the assumptions precisely, derive the estimator, and prove its core properties: unbiasedness and the Gauss-Markov theorem. Every result rests on specific assumptions, and we will be explicit about which assumption each step requires.
+
+---
+
+## The Linear Model {#sec-ols-model}
+
+We observe $n$ units. For each unit $i$, we have a scalar outcome $Y_i$ and a $k \times 1$ vector of regressors $X_i = (X_{i1}, X_{i2}, \ldots, X_{ik})'$. The first element is typically a constant: $X_{i1} = 1$.
+
+The **linear regression model** asserts:
+
+$$
+Y_i = X_i'\beta + \varepsilon_i, \qquad i = 1, \ldots, n \tag{1.1}
+$$
+
+where $\beta = (\beta_1, \ldots, \beta_k)'$ is the $k \times 1$ parameter vector and $\varepsilon_i$ is the unobserved error term.
+
+### Matrix Notation {#sec-ols-matrix}
+
+Stacking all $n$ observations:
+
+$$
+\underset{n \times 1}{\mathbf{Y}} = \underset{n \times k}{\mathbf{X}} \underset{k \times 1}{\boldsymbol{\beta}} + \underset{n \times 1}{\boldsymbol{\varepsilon}} \tag{1.2}
+$$
+
+where
+
+$$
+\mathbf{Y} = \begin{pmatrix} Y_1 \\ Y_2 \\ \vdots \\ Y_n \end{pmatrix}, \quad
+\mathbf{X} = \begin{pmatrix} X_1' \\ X_2' \\ \vdots \\ X_n' \end{pmatrix} = \begin{pmatrix} X_{11} & X_{12} & \cdots & X_{1k} \\ X_{21} & X_{22} & \cdots & X_{2k} \\ \vdots & \vdots & \ddots & \vdots \\ X_{n1} & X_{n2} & \cdots & X_{nk} \end{pmatrix}, \quad
+\boldsymbol{\varepsilon} = \begin{pmatrix} \varepsilon_1 \\ \varepsilon_2 \\ \vdots \\ \varepsilon_n \end{pmatrix}
+$$
+
+### Assumptions {#sec-ols-assumptions}
+
+The properties of OLS depend on the following conditions. We state them in order of increasing strength.
+
+| ID | Name | Statement | Role |
+|---|---|---|---|
+| OLS.1 | **Linearity** | $\mathbf{Y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ | Model specification; defines what we are estimating |
+| OLS.2 | **Random sampling** | $(Y_i, X_i')$ are i.i.d. draws from a joint distribution | Observations are independent; enables LLN and CLT |
+| OLS.3 | **No perfect collinearity** | $\text{rank}(\mathbf{X}) = k$ with probability 1 | $\mathbf{X}'\mathbf{X}$ is invertible; OLS has a unique solution |
+| OLS.4 | **Strict exogeneity** | $\mathbb{E}[\boldsymbol{\varepsilon} \mid \mathbf{X}] = \mathbf{0}$ | Errors are mean-zero conditional on all regressors; delivers unbiasedness |
+| OLS.5 | **Spherical errors** | $\text{Var}(\boldsymbol{\varepsilon} \mid \mathbf{X}) = \sigma^2 \mathbf{I}_n$ | Homoskedasticity + no serial correlation; delivers efficiency (Gauss-Markov) |
+
+::: {.callout-warning}
+## Assumption Strength
+
+OLS.4 (strict exogeneity) is the assumption most frequently violated in applied work. Endogeneity---from omitted variables, simultaneity, or measurement error---is the central concern of the causal inference chapters that follow.
+
+OLS.5 (spherical errors) combines two conditions: *homoskedasticity* ($\text{Var}(\varepsilon_i \mid X_i) = \sigma^2$ for all $i$) and *no autocorrelation* ($\text{Cov}(\varepsilon_i, \varepsilon_j \mid \mathbf{X}) = 0$ for $i \neq j$). Heteroskedasticity-robust standard errors relax the first; clustered standard errors relax both.
+
+For a practical guide to robust, cluster, and HAC choices, see [Standard Errors in Practice](07-standard-errors.qmd).
+:::
+
+---
+
+## The OLS Estimator {#sec-ols-estimator}
+
+OLS chooses $\boldsymbol{\beta}$ to minimize the sum of squared residuals:
+
+$$
+\hat{\boldsymbol{\beta}}_{\text{OLS}} = \arg\min_{\mathbf{b} \in \mathbb{R}^k} \sum_{i=1}^{n} (Y_i - X_i'\mathbf{b})^2 = \arg\min_{\mathbf{b}} (\mathbf{Y} - \mathbf{X}\mathbf{b})'(\mathbf{Y} - \mathbf{X}\mathbf{b}) \tag{1.3}
+$$
+
+### Derivation via First-Order Conditions {#sec-ols-foc}
+
+Define $S(\mathbf{b}) = (\mathbf{Y} - \mathbf{X}\mathbf{b})'(\mathbf{Y} - \mathbf{X}\mathbf{b})$. Expanding:
+
+$$
+S(\mathbf{b}) = \mathbf{Y}'\mathbf{Y} - 2\mathbf{b}'\mathbf{X}'\mathbf{Y} + \mathbf{b}'\mathbf{X}'\mathbf{X}\mathbf{b}
+$$
+
+The gradient with respect to $\mathbf{b}$:
+
+$$
+\frac{\partial S}{\partial \mathbf{b}} = -2\mathbf{X}'\mathbf{Y} + 2\mathbf{X}'\mathbf{X}\mathbf{b}
+$$
+
+Setting the gradient to zero yields the **normal equations**:
+
+$$
+\mathbf{X}'\mathbf{X}\hat{\boldsymbol{\beta}} = \mathbf{X}'\mathbf{Y} \tag{1.4}
+$$
+
+::: {.callout-note}
+## Theorem 1.1 (OLS Estimator)
+
+Under OLS.1 and OLS.3, the unique solution to the normal equations is:
+
+$$
+\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{Y} \tag{1.5}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 1.1
+
+**Step 1.** By OLS.3, $\text{rank}(\mathbf{X}) = k$, so $\mathbf{X}'\mathbf{X}$ is a $k \times k$ positive definite matrix. In particular, it is invertible.
+
+**Step 2.** Left-multiply the normal equations by $(\mathbf{X}'\mathbf{X})^{-1}$:
+
+$$
+(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{X}\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{Y}
+$$
+
+$$
+\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{Y}
+$$
+
+**Step 3 (sufficiency).** The second derivative $\frac{\partial^2 S}{\partial \mathbf{b} \partial \mathbf{b}'} = 2\mathbf{X}'\mathbf{X}$ is positive definite (by OLS.3), confirming this is a global minimum. $\blacksquare$
+:::
+
+### Geometric Interpretation {#sec-ols-geometry}
+
+The fitted values $\hat{\mathbf{Y}} = \mathbf{X}\hat{\boldsymbol{\beta}}$ are the orthogonal projection of $\mathbf{Y}$ onto the column space of $\mathbf{X}$. The **projection matrix** (or hat matrix) is:
+
+$$
+\mathbf{P} = \mathbf{X}(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}' \tag{1.6}
+$$
+
+so that $\hat{\mathbf{Y}} = \mathbf{P}\mathbf{Y}$. The residual vector $\hat{\boldsymbol{\varepsilon}} = \mathbf{Y} - \hat{\mathbf{Y}} = \mathbf{M}\mathbf{Y}$, where $\mathbf{M} = \mathbf{I}_n - \mathbf{P}$ is the **annihilator matrix**.
+
+Key properties:
+
+- $\mathbf{P}$ is symmetric and idempotent: $\mathbf{P} = \mathbf{P}'$, $\mathbf{P}^2 = \mathbf{P}$
+- $\mathbf{M}$ is symmetric and idempotent: $\mathbf{M} = \mathbf{M}'$, $\mathbf{M}^2 = \mathbf{M}$
+- $\mathbf{P}\mathbf{M} = \mathbf{0}$ --- fitted values and residuals are orthogonal
+- $\text{tr}(\mathbf{P}) = k$, $\text{tr}(\mathbf{M}) = n - k$
+
+These properties mean that OLS geometrically decomposes $\mathbf{Y}$ into a component in the column space of $\mathbf{X}$ (the "explained" part) and a component orthogonal to it (the residual).
+
+---
+
+## Unbiasedness {#sec-ols-unbiasedness}
+
+The first major result: if the conditional mean of the errors is zero, OLS recovers the true parameter on average.
+
+::: {.callout-note}
+## Theorem 1.2 (Unbiasedness of OLS)
+
+Under assumptions OLS.1--OLS.4:
+
+$$
+\mathbb{E}[\hat{\boldsymbol{\beta}} \mid \mathbf{X}] = \boldsymbol{\beta} \tag{1.7}
+$$
+
+The OLS estimator is conditionally (and therefore unconditionally) unbiased.
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 1.2
+
+**Step 1.** Substitute the model (OLS.1) into the OLS formula:
+
+$$
+\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{Y} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'(\mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon})
+$$
+
+**Step 2.** Expand:
+
+$$
+\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{X}\boldsymbol{\beta} + (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\boldsymbol{\varepsilon} = \boldsymbol{\beta} + (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\boldsymbol{\varepsilon}
+$$
+
+**Step 3.** Take the conditional expectation, using OLS.4 ($\mathbb{E}[\boldsymbol{\varepsilon} \mid \mathbf{X}] = \mathbf{0}$):
+
+$$
+\mathbb{E}[\hat{\boldsymbol{\beta}} \mid \mathbf{X}] = \boldsymbol{\beta} + (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbb{E}[\boldsymbol{\varepsilon} \mid \mathbf{X}] = \boldsymbol{\beta} + \mathbf{0} = \boldsymbol{\beta}
+$$
+
+Note that $(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'$ is a function of $\mathbf{X}$ alone and passes through the conditional expectation. $\blacksquare$
+:::
+
+The key insight: the term $(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\boldsymbol{\varepsilon}$ is the *estimation error*. Its conditional mean is zero because of strict exogeneity (OLS.4). Without this assumption---for instance, if $X$ is correlated with $\varepsilon$---the estimation error has a nonzero mean, and OLS is biased. This is the endogeneity problem addressed in [Instrumental Variables](03-iv.qmd).
+
+---
+
+## The Gauss-Markov Theorem {#sec-ols-gauss-markov}
+
+Unbiasedness alone is not enough. Many linear unbiased estimators of $\boldsymbol{\beta}$ exist---for instance, the first observation $(X_1'X_1)^{-1}X_1'Y_1$ is unbiased but wasteful. Gauss-Markov says OLS has the smallest variance among all linear unbiased estimators.
+
+### Conditional Variance of OLS {#sec-ols-variance}
+
+Before stating Gauss-Markov, we need the variance of $\hat{\boldsymbol{\beta}}$.
+
+::: {.callout-note}
+## Theorem 1.3 (Conditional Variance of OLS)
+
+Under OLS.1--OLS.5:
+
+$$
+\text{Var}(\hat{\boldsymbol{\beta}} \mid \mathbf{X}) = \sigma^2 (\mathbf{X}'\mathbf{X})^{-1} \tag{1.8}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 1.3
+
+**Step 1.** From the proof of unbiasedness, $\hat{\boldsymbol{\beta}} - \boldsymbol{\beta} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\boldsymbol{\varepsilon}$.
+
+**Step 2.** The conditional variance is:
+
+$$
+\text{Var}(\hat{\boldsymbol{\beta}} \mid \mathbf{X}) = \mathbb{E}\left[(\hat{\boldsymbol{\beta}} - \boldsymbol{\beta})(\hat{\boldsymbol{\beta}} - \boldsymbol{\beta})' \mid \mathbf{X}\right]
+$$
+
+$$
+= (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}' \, \mathbb{E}[\boldsymbol{\varepsilon}\boldsymbol{\varepsilon}' \mid \mathbf{X}] \, \mathbf{X}(\mathbf{X}'\mathbf{X})^{-1}
+$$
+
+**Step 3.** Apply OLS.5: $\mathbb{E}[\boldsymbol{\varepsilon}\boldsymbol{\varepsilon}' \mid \mathbf{X}] = \sigma^2 \mathbf{I}_n$:
+
+$$
+= \sigma^2 (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{X}(\mathbf{X}'\mathbf{X})^{-1} = \sigma^2 (\mathbf{X}'\mathbf{X})^{-1}
+$$
+
+$\blacksquare$
+:::
+
+### The Gauss-Markov Result {#sec-ols-blue}
+
+::: {.callout-note}
+## Theorem 1.4 (Gauss-Markov)
+
+Under OLS.1--OLS.5, the OLS estimator $\hat{\boldsymbol{\beta}}$ is the **Best Linear Unbiased Estimator** (BLUE) of $\boldsymbol{\beta}$.
+
+That is, for any other linear unbiased estimator $\tilde{\boldsymbol{\beta}} = \mathbf{C}\mathbf{Y}$ satisfying $\mathbb{E}[\tilde{\boldsymbol{\beta}} \mid \mathbf{X}] = \boldsymbol{\beta}$:
+
+$$
+\text{Var}(\tilde{\boldsymbol{\beta}} \mid \mathbf{X}) - \text{Var}(\hat{\boldsymbol{\beta}} \mid \mathbf{X}) \text{ is positive semi-definite} \tag{1.9}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 1.4 (Gauss-Markov)
+
+**Step 1.** Let $\tilde{\boldsymbol{\beta}} = \mathbf{C}\mathbf{Y}$ be any linear estimator of $\boldsymbol{\beta}$, where $\mathbf{C}$ is a $k \times n$ matrix that may depend on $\mathbf{X}$. Write $\mathbf{C} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}' + \mathbf{D}$, where $\mathbf{D} = \mathbf{C} - (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'$.
+
+**Step 2.** Unbiasedness requires $\mathbb{E}[\tilde{\boldsymbol{\beta}} \mid \mathbf{X}] = \boldsymbol{\beta}$ for all $\boldsymbol{\beta}$. Substituting the model:
+
+$$
+\mathbb{E}[\mathbf{C}\mathbf{Y} \mid \mathbf{X}] = \mathbf{C}\mathbf{X}\boldsymbol{\beta} = \boldsymbol{\beta} \quad \Rightarrow \quad \mathbf{C}\mathbf{X} = \mathbf{I}_k
+$$
+
+Since $(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{X} = \mathbf{I}_k$, the condition becomes $\mathbf{D}\mathbf{X} = \mathbf{0}$.
+
+**Step 3.** Compute the variance of $\tilde{\boldsymbol{\beta}}$:
+
+$$
+\text{Var}(\tilde{\boldsymbol{\beta}} \mid \mathbf{X}) = \mathbf{C} \, \text{Var}(\boldsymbol{\varepsilon} \mid \mathbf{X}) \, \mathbf{C}' = \sigma^2 \mathbf{C}\mathbf{C}'
+$$
+
+Expanding $\mathbf{C} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}' + \mathbf{D}$:
+
+$$
+\mathbf{C}\mathbf{C}' = \left[(\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}' + \mathbf{D}\right]\left[\mathbf{X}(\mathbf{X}'\mathbf{X})^{-1} + \mathbf{D}'\right]
+$$
+
+**Step 4.** Expand the product. The cross terms vanish because $\mathbf{D}\mathbf{X} = \mathbf{0}$:
+
+$$
+\mathbf{C}\mathbf{C}' = (\mathbf{X}'\mathbf{X})^{-1} + \mathbf{D}\mathbf{D}'
+$$
+
+**Step 5.** Therefore:
+
+$$
+\text{Var}(\tilde{\boldsymbol{\beta}} \mid \mathbf{X}) = \sigma^2(\mathbf{X}'\mathbf{X})^{-1} + \sigma^2 \mathbf{D}\mathbf{D}' = \text{Var}(\hat{\boldsymbol{\beta}} \mid \mathbf{X}) + \sigma^2 \mathbf{D}\mathbf{D}'
+$$
+
+Since $\mathbf{D}\mathbf{D}'$ is positive semi-definite (it equals zero only when $\mathbf{D} = \mathbf{0}$, i.e., $\tilde{\boldsymbol{\beta}} = \hat{\boldsymbol{\beta}}$), the OLS estimator has the smallest variance in the matrix sense among all linear unbiased estimators. $\blacksquare$
+:::
+
+What does "best" mean in practice? For any linear combination $\mathbf{a}'\boldsymbol{\beta}$, the OLS-based estimator $\mathbf{a}'\hat{\boldsymbol{\beta}}$ has the smallest variance among all linear unbiased estimators of $\mathbf{a}'\boldsymbol{\beta}$. No other linear rule can beat OLS without introducing bias.
+
+::: {.callout-warning}
+## What Gauss-Markov Does *Not* Say
+
+The theorem restricts attention to **linear** estimators. Nonlinear estimators (such as maximum likelihood under normality) can achieve lower variance. The theorem also requires **OLS.5**---homoskedasticity. Under heteroskedasticity, OLS is no longer BLUE; Generalized Least Squares or heteroskedasticity-robust inference is needed.
+:::
+
+---
+
+## Estimating the Error Variance {#sec-ols-sigma}
+
+The variance formula in Theorem 1.3 contains the unknown $\sigma^2$. We need an estimator.
+
+::: {.callout-note}
+## Theorem 1.5 (Unbiased Estimator of $\sigma^2$)
+
+Under OLS.1--OLS.5:
+
+$$
+s^2 = \frac{\hat{\boldsymbol{\varepsilon}}'\hat{\boldsymbol{\varepsilon}}}{n - k} = \frac{\text{SSR}}{n - k} \tag{1.10}
+$$
+
+is an unbiased estimator of $\sigma^2$: $\mathbb{E}[s^2 \mid \mathbf{X}] = \sigma^2$.
+:::
+
+The denominator $n - k$ (not $n$) corrects for the degrees of freedom lost in estimating $k$ parameters. This is the same logic as dividing by $n - 1$ in the sample variance.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 1.5
+
+**Step 1.** The residuals are $\hat{\boldsymbol{\varepsilon}} = \mathbf{M}\mathbf{Y} = \mathbf{M}(\mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}) = \mathbf{M}\boldsymbol{\varepsilon}$, since $\mathbf{M}\mathbf{X} = \mathbf{0}$.
+
+**Step 2.** The sum of squared residuals is:
+
+$$
+\hat{\boldsymbol{\varepsilon}}'\hat{\boldsymbol{\varepsilon}} = \boldsymbol{\varepsilon}'\mathbf{M}'\mathbf{M}\boldsymbol{\varepsilon} = \boldsymbol{\varepsilon}'\mathbf{M}\boldsymbol{\varepsilon}
+$$
+
+using $\mathbf{M}' = \mathbf{M}$ and $\mathbf{M}^2 = \mathbf{M}$.
+
+**Step 3.** Take the conditional expectation:
+
+$$
+\mathbb{E}[\hat{\boldsymbol{\varepsilon}}'\hat{\boldsymbol{\varepsilon}} \mid \mathbf{X}] = \mathbb{E}[\boldsymbol{\varepsilon}'\mathbf{M}\boldsymbol{\varepsilon} \mid \mathbf{X}] = \text{tr}\left(\mathbf{M} \, \mathbb{E}[\boldsymbol{\varepsilon}\boldsymbol{\varepsilon}' \mid \mathbf{X}]\right)
+$$
+
+using the trace identity $\mathbb{E}[\mathbf{a}'\mathbf{B}\mathbf{a}] = \text{tr}(\mathbf{B} \, \mathbb{E}[\mathbf{a}\mathbf{a}'])$ for $\mathbf{a}$ with zero mean.
+
+**Step 4.** Apply OLS.5: $\mathbb{E}[\boldsymbol{\varepsilon}\boldsymbol{\varepsilon}' \mid \mathbf{X}] = \sigma^2 \mathbf{I}_n$:
+
+$$
+= \text{tr}(\mathbf{M} \cdot \sigma^2 \mathbf{I}_n) = \sigma^2 \text{tr}(\mathbf{M}) = \sigma^2(n - k)
+$$
+
+since $\text{tr}(\mathbf{M}) = \text{tr}(\mathbf{I}_n) - \text{tr}(\mathbf{P}) = n - k$.
+
+**Step 5.** Dividing both sides by $n - k$:
+
+$$
+\mathbb{E}\left[\frac{\hat{\boldsymbol{\varepsilon}}'\hat{\boldsymbol{\varepsilon}}}{n - k} \mid \mathbf{X}\right] = \sigma^2
+$$
+
+$\blacksquare$
+:::
+
+The estimated variance-covariance matrix of $\hat{\boldsymbol{\beta}}$ is then:
+
+$$
+\widehat{\text{Var}}(\hat{\boldsymbol{\beta}}) = s^2 (\mathbf{X}'\mathbf{X})^{-1} \tag{1.11}
+$$
+
+The square roots of the diagonal elements are the **standard errors** of the individual coefficients, used to construct $t$-statistics and confidence intervals.
+
+---
+
+## Interactive Simulation {#sec-ols-simulation}
+
+The simulation below generates data from a simple linear model $Y_i = \beta_0 + \beta_1 X_i + \varepsilon_i$ and fits OLS. Adjust the parameters to see how sample size, slope, and error variance affect the fit and the residual distribution.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 560
+#| echo: false
+
+# Simulation: OLS scatter fit with residual distribution
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=20, max=500, value=100, step=10),
+            ui.input_slider("beta0", "Intercept (beta_0)", min=-5.0, max=5.0, value=2.0, step=0.5),
+            ui.input_slider("beta1", "Slope (beta_1)", min=-3.0, max=3.0, value=1.5, step=0.1),
+            ui.input_slider("sigma", "Error std dev (sigma)", min=0.5, max=5.0, value=1.5, step=0.5),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Try:** Increase sigma to see OLS struggle with noise. "
+                "Increase n to see estimates stabilize."
+            ),
+            width=280,
+        ),
+        ui.output_plot("ols_plot"),
+    ),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def generate_data():
+        input.resample()
+        n = input.n()
+        x = np.random.uniform(0, 10, n)
+        eps = np.random.normal(0, input.sigma(), n)
+        y = input.beta0() + input.beta1() * x + eps
+        return x, y
+
+    @render.plot
+    def ols_plot():
+        x, y = generate_data()
+
+        # OLS estimation
+        X_mat = np.column_stack([np.ones_like(x), x])
+        beta_hat = np.linalg.lstsq(X_mat, y, rcond=None)[0]
+        y_hat = X_mat @ beta_hat
+        residuals = y - y_hat
+
+        n = len(x)
+        k = 2
+        s2 = np.sum(residuals**2) / (n - k)
+        se_beta = np.sqrt(s2 * np.diag(np.linalg.inv(X_mat.T @ X_mat)))
+
+        fig, axes = plt.subplots(1, 2, figsize=(9.5, 4))
+
+        # Left panel: scatter + fitted line
+        axes[0].scatter(x, y, alpha=0.4, s=18, color="#4a7fb5", edgecolors="none")
+        x_line = np.linspace(x.min(), x.max(), 100)
+        y_line = beta_hat[0] + beta_hat[1] * x_line
+        axes[0].plot(x_line, y_line, color="#d94f4f", linewidth=2.2,
+                     label="OLS: y = {:.2f} + {:.2f}x".format(beta_hat[0], beta_hat[1]))
+        # True line (dashed)
+        y_true = input.beta0() + input.beta1() * x_line
+        axes[0].plot(x_line, y_true, color="#2d2d2d", linewidth=1.2,
+                     linestyle="--", alpha=0.6,
+                     label="True: y = {:.1f} + {:.1f}x".format(input.beta0(), input.beta1()))
+        axes[0].set_xlabel("Regressor X", fontsize=11)
+        axes[0].set_ylabel("Outcome Y", fontsize=11)
+        axes[0].set_title("OLS Fit", fontsize=12, fontweight="bold")
+        axes[0].legend(fontsize=8.5, loc="best")
+
+        # Annotation box with estimates
+        text = ("b0 = {:.3f}  (SE = {:.3f})\n"
+                "b1 = {:.3f}  (SE = {:.3f})\n"
+                "s  = {:.3f}").format(
+                    beta_hat[0], se_beta[0],
+                    beta_hat[1], se_beta[1],
+                    np.sqrt(s2))
+        axes[0].text(0.03, 0.97, text, transform=axes[0].transAxes,
+                     fontsize=8, verticalalignment="top",
+                     fontfamily="monospace",
+                     bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                               edgecolor="#cccccc", alpha=0.9))
+
+        # Right panel: residual histogram + normal overlay
+        n_bins = min(25, max(10, n // 10))
+        axes[1].hist(residuals, bins=n_bins, density=True,
+                     alpha=0.7, color="#4a7fb5", edgecolor="white", linewidth=0.5)
+        r_range = np.linspace(residuals.min(), residuals.max(), 200)
+        sigma_hat = np.sqrt(s2)
+        normal_pdf = (1.0 / (sigma_hat * np.sqrt(2 * np.pi))) * np.exp(-0.5 * (r_range / sigma_hat) ** 2)
+        axes[1].plot(r_range, normal_pdf,
+                     color="#d94f4f", linewidth=1.8,
+                     label="N(0, s2 = {:.2f})".format(s2))
+        axes[1].set_xlabel("Residuals", fontsize=11)
+        axes[1].set_ylabel("Density", fontsize=11)
+        axes[1].set_title("Residual Distribution", fontsize=12, fontweight="bold")
+        axes[1].legend(fontsize=8.5, loc="best")
+
+        plt.tight_layout()
+        return fig
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-ols-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| **Theorem 1.1** (OLS formula) | OLS.1 (linearity), OLS.3 (full rank) | $\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{Y}$ is the unique minimizer of SSR |
+| **Theorem 1.2** (Unbiasedness) | OLS.1--OLS.4 | $\mathbb{E}[\hat{\boldsymbol{\beta}} \mid \mathbf{X}] = \boldsymbol{\beta}$ |
+| **Theorem 1.3** (Variance) | OLS.1--OLS.5 | $\text{Var}(\hat{\boldsymbol{\beta}} \mid \mathbf{X}) = \sigma^2(\mathbf{X}'\mathbf{X})^{-1}$ |
+| **Theorem 1.4** (Gauss-Markov) | OLS.1--OLS.5 | OLS is BLUE: lowest variance among all linear unbiased estimators |
+| **Theorem 1.5** ($\sigma^2$ estimation) | OLS.1--OLS.5 | $s^2 = \text{SSR}/(n-k)$ is unbiased for $\sigma^2$ |
+
+The architecture of these results is cumulative. Each theorem adds one assumption to the previous set. Linearity and full rank give you the formula. Exogeneity gives you unbiasedness. Homoskedasticity gives you efficiency. The chapter on [large-sample theory](02-asymptotics.qmd) shows that many of these results extend---in a weaker but still useful form---when the finite-sample assumptions are relaxed.

@@ -1,0 +1,28 @@
+---
+title: "Problem Sets"
+description: "Practice problems with collapsed solutions and interactive verification."
+number-sections: false
+---
+
+## Overview
+
+Each problem set accompanies a chapter. Problems come in two types:
+
+- **Analytical** — Question visible, solution collapsed behind a callout block. Expand when ready.
+- **Computational** — Question with an interactive code block for verification. Adjust parameters and run.
+
+Difficulty indicators: ★ standard · ★★ challenging · ★★★ advanced
+
+---
+
+## Available Problem Sets
+
+| Problem Set | Chapter | Topics | Status |
+|---|---|---|---|
+| [Problem Set 01](pset-01.qmd) | OLS + Selection Bias + Asymptotics | Decomposition, OLS derivation, unbiasedness, CLT-based inference | *Available (Draft v1)* |
+
+---
+
+::: {.callout-note}
+## More problem sets will be added as chapters are completed.
+:::

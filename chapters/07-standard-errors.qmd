@@ -1,0 +1,28 @@
+---
+title: "Standard Errors in Practice"
+description: "Robust, cluster-robust, and HAC inference, with guidance for applied work."
+---
+
+## Motivation {#sec-standard-errors-motivation}
+
+*This chapter is under development.* It will explain why default standard errors often fail in real datasets and how to choose robust, cluster-robust, and HAC alternatives.
+
+### What You Will Learn
+
+- When homoskedastic standard errors are invalid
+- How HC, cluster, and HAC estimators differ
+- How standard-error choice changes t-tests and confidence intervals
+- Practical reporting rules and common inference mistakes
+
+---
+
+::: {.callout-note}
+## Coming Soon
+
+This chapter will include:
+
+- **Intuition** — Why “same coefficients” can imply different conclusions.
+- **Formalization** — Sandwich variance estimators for HC, cluster, and HAC.
+- **Proofs** — Asymptotic validity conditions and failure cases (collapsed by default).
+- **Interactive code** — Compare CI width and rejection rates across SE choices.
+:::

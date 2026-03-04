@@ -1,0 +1,28 @@
+---
+title: "Regression Discontinuity"
+description: "Sharp/Fuzzy RDD, local linear regression, bandwidth selection, and McCrary density test."
+---
+
+## Motivation {#sec-rdd-motivation}
+
+*This chapter is under development.* It will cover regression discontinuity designs—sharp and fuzzy—including modern bandwidth selection methods.
+
+### What You Will Learn
+
+- Sharp vs. fuzzy RDD and their identification strategies
+- Local linear regression and kernel choice
+- Bandwidth selection (Calonico, Cattaneo, and Titiunik 2014)
+- The McCrary density test for manipulation
+
+---
+
+::: {.callout-note}
+## Coming Soon
+
+This chapter will include:
+
+- **Intuition** — Why a cutoff creates a natural experiment.
+- **Formalization** — Sharp/Fuzzy RDD estimands.
+- **Proofs** — Local polynomial bias-variance tradeoff (collapsed by default).
+- **Interactive code** — Bandwidth parameter vs. RDD estimate precision.
+:::

@@ -1,0 +1,28 @@
+---
+title: "References"
+number-sections: false
+---
+
+## Textbooks
+
+- **Hansen, Bruce E.** (2022). *Econometrics*. Princeton University Press. [[Full PDF](https://www.ssc.wisc.edu/~bhansen/econometrics/)]
+- **Angrist, Joshua D. and Jörn-Steffen Pischke.** (2009). *Mostly Harmless Econometrics: An Empiricist's Companion*. Princeton University Press. [[Amazon](https://www.amazon.com/dp/0691120358)]
+- **Cunningham, Scott.** (2021). *Causal Inference: The Mixtape*. Yale University Press. [[Free web version](https://mixtape.scunning.com/)]
+- **Huntington-Klein, Nick.** (2021). *The Effect: An Introduction to Research Design and Causality*. Chapman & Hall/CRC. [[Free web version](https://theeffectbook.net/)]
+- **Wooldridge, Jeffrey M.** (2010). *Econometric Analysis of Cross Section and Panel Data*. 2nd ed. MIT Press.
+- **Greene, William H.** (2018). *Econometric Analysis*. 8th ed. Pearson.
+
+## Key Papers
+
+- **Callaway, Brantly and Pedro H.C. Sant'Anna.** (2021). "Difference-in-Differences with Multiple Time Periods." *Journal of Econometrics*, 225(2), 200–230. [[SSRN Working Paper](https://ssrn.com/abstract=3460877)]
+- **Calonico, Sebastian, Matias D. Cattaneo, and Rocío Titiunik.** (2014). "Robust Nonparametric Confidence Intervals for Regression-Discontinuity Designs." *Econometrica*, 82(6), 2295–2326. [[Author's PDF](https://cattaneo.princeton.edu/papers/Calonico-Cattaneo-Titiunik_2014_ECMA.pdf)]
+- **Stock, James H. and Motohiro Yogo.** (2005). "Testing for Weak Instruments in Linear IV Regression." In *Identification and Inference for Econometric Models*, ed. D.W.K. Andrews and J.H. Stock. Cambridge University Press.
+- **Angrist, Joshua D. and Guido W. Imbens.** (1994). "Identification and Estimation of Local Average Treatment Effects." *Econometrica*, 62(2), 467–475.
+
+---
+
+::: {.callout-note}
+## Citation Convention
+
+Where a public version exists—a working paper, NBER preprint, SSRN draft, author's website, or arXiv posting—the citation links to it directly. If the published version differs materially from the working paper, a brief note is added.
+:::

@@ -1,0 +1,330 @@
+---
+title: "Large-Sample Theory"
+description: "LLN, CLT, consistency, asymptotic normality, and the Delta method."
+---
+
+## Motivation {#sec-asymptotics-motivation}
+
+Finite-sample formulas are elegant, but real data rarely satisfy textbook assumptions exactly. Errors can be heteroskedastic, regressors can be non-Gaussian, and sample sizes can vary from tiny to massive. We still need inference that remains reliable when the model is only approximately correct.
+
+Large-sample theory answers that need. Instead of asking whether an estimator is exact at a fixed $n$, we ask what happens as $n \to \infty$: does the estimator converge to the truth, and at what rate does uncertainty shrink?
+
+This chapter develops the core asymptotic toolkit behind modern applied econometrics: Law of Large Numbers (LLN), Central Limit Theorem (CLT), consistency, asymptotic normality, and the Delta method. These results are the bridge from [OLS Foundations](01-ols.qmd) to robust inference choices in [Standard Errors in Practice](07-standard-errors.qmd).
+
+---
+
+## Convergence Concepts {#sec-asymptotics-concepts}
+
+Let $\{Z_n\}$ be a sequence of random variables and $Z$ a limiting random variable.
+
+- **Convergence in probability**: $Z_n \xrightarrow{p} Z$ if for every $\varepsilon>0$,
+  $$
+  \mathbb{P}(|Z_n - Z| > \varepsilon) \to 0. \tag{2.1}
+  $$
+- **Convergence in distribution**: $Z_n \xrightarrow{d} Z$ if CDFs converge at continuity points of $Z$.
+
+Two workhorse rules:
+
+- **Continuous mapping theorem**: if $Z_n \xrightarrow{p} Z$ and $g$ is continuous, then $g(Z_n) \xrightarrow{p} g(Z)$.
+- **Slutsky's theorem**: if $A_n \xrightarrow{d} A$ and $B_n \xrightarrow{p} b$ (constant), then $A_n B_n \xrightarrow{d} bA$.
+
+These rules let us move from primitive sample moments to estimators and test statistics.
+
+---
+
+## Law of Large Numbers and Consistency {#sec-asymptotics-lln}
+
+Suppose $W_1,\ldots,W_n$ are i.i.d. with $\mathbb{E}|W_i|<\infty$. Let
+
+$$
+\bar W_n = \frac{1}{n}\sum_{i=1}^n W_i. \tag{2.2}
+$$
+
+::: {.callout-note}
+## Theorem 2.1 (Weak Law of Large Numbers)
+
+$$
+\bar W_n \xrightarrow{p} \mathbb{E}[W_i]. \tag{2.3}
+$$
+:::
+
+LLN is the engine of consistency. If an estimator can be written as a continuous function of sample averages, and those averages converge to their population counterparts, then the estimator converges to the target parameter.
+
+### Example: OLS Consistency (Sketch) {#sec-asymptotics-ols-consistency}
+
+Notation follows [OLS Foundations](01-ols.qmd): we use $\mathbf{X}$ for the regressor matrix, $\boldsymbol{\varepsilon}$ for the error vector, and $\hat{\boldsymbol{\beta}}$ for the OLS estimator.
+
+In a linear model with exogeneity and full-rank population moments,
+
+$$
+\hat{\boldsymbol{\beta}} - \boldsymbol{\beta} = \left(\frac{\mathbf{X}'\mathbf{X}}{n}\right)^{-1}\frac{\mathbf{X}'\boldsymbol{\varepsilon}}{n}. \tag{2.4}
+$$
+
+By LLN,
+
+$$
+\frac{\mathbf{X}'\mathbf{X}}{n} \xrightarrow{p} Q_{xx}, \qquad \frac{\mathbf{X}'\boldsymbol{\varepsilon}}{n} \xrightarrow{p} 0,
+$$
+
+so by continuous mapping,
+
+$$
+\hat{\boldsymbol{\beta}} \xrightarrow{p} \boldsymbol{\beta}. \tag{2.5}
+$$
+
+---
+
+## Central Limit Theorem and Asymptotic Normality {#sec-asymptotics-clt}
+
+LLN gives convergence of point estimates; CLT gives approximate sampling distributions.
+
+::: {.callout-note}
+## Theorem 2.2 (Lindeberg-Levy CLT)
+
+If $W_i$ are i.i.d. with mean $\mu$ and variance $\sigma^2<\infty$, then
+
+$$
+\sqrt{n}(\bar W_n - \mu) \xrightarrow{d} \mathcal{N}(0,\sigma^2). \tag{2.6}
+$$
+:::
+
+For vector moments, the multivariate CLT gives
+
+$$
+\sqrt{n}(\bar g_n - g_0) \xrightarrow{d} \mathcal{N}(0,\Omega). \tag{2.7}
+$$
+
+This directly yields asymptotic normality of many estimators, including OLS, MLE, and GMM (see [Maximum Likelihood Estimation](09-mle.qmd) and [Generalized Method of Moments](10-gmm.qmd)).
+
+::: {.callout-note}
+## Theorem 2.3 (Asymptotic Normality of OLS)
+
+Assume $(Y_i,X_i)$ are i.i.d., $\mathbb{E}[\varepsilon_i\mid X_i]=0$, $\mathbb{E}\|X_i\varepsilon_i\|^2<\infty$, and $Q_{xx}=\mathbb{E}[X_iX_i']$ is positive definite.
+
+$$
+\sqrt{n}(\hat\beta-\beta) \xrightarrow{d} \mathcal{N}(0,V), \tag{2.8}
+$$
+
+where
+
+$$
+V = Q_{xx}^{-1} \Omega Q_{xx}^{-1}, \qquad
+Q_{xx}=\mathbb{E}[X_iX_i'], \qquad
+\Omega=\mathbb{E}[X_iX_i'\varepsilon_i^2]. \tag{2.9}
+$$
+:::
+
+Under homoskedasticity, $\Omega=\sigma^2Q_{xx}$ and $V=\sigma^2Q_{xx}^{-1}$. Under heteroskedasticity, use sandwich estimators for $V$; this is exactly why robust/cluster/HAC standard errors are central in practice.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof sketch of Theorem 2.3
+
+**Step 1.** Rewrite the estimation error:
+
+$$
+\sqrt{n}(\hat\beta-\beta)=\left(\frac{X'X}{n}\right)^{-1}\left(\frac{1}{\sqrt{n}}\sum_{i=1}^n X_i\varepsilon_i\right). \tag{2.10}
+$$
+
+**Step 2.** By LLN, $X'X/n \xrightarrow{p} Q_{xx}$.
+
+**Step 3.** By multivariate CLT,
+
+$$
+\frac{1}{\sqrt{n}}\sum_{i=1}^n X_i\varepsilon_i \xrightarrow{d} \mathcal{N}(0,\Omega). \tag{2.11}
+$$
+
+**Step 4.** Apply Slutsky's theorem to combine both limits and obtain
+
+$$
+\sqrt{n}(\hat\beta-\beta) \xrightarrow{d} \mathcal{N}(0,Q_{xx}^{-1}\Omega Q_{xx}^{-1}).
+$$
+
+$\blacksquare$
+:::
+
+---
+
+## Delta Method {#sec-asymptotics-delta}
+
+Often we care about transformed parameters: elasticities, risk ratios, or nonlinear functions of coefficients.
+
+::: {.callout-note}
+## Theorem 2.4 (Delta Method)
+
+If
+
+$$
+\sqrt{n}(\hat\theta-\theta_0) \xrightarrow{d} \mathcal{N}(0,\Sigma), \tag{2.12}
+$$
+
+and $g$ is differentiable at $\theta_0$, then
+
+$$
+\sqrt{n}(g(\hat\theta)-g(\theta_0)) \xrightarrow{d} \mathcal{N}(0, G\Sigma G'), \tag{2.13}
+$$
+
+where $G = \nabla g(\theta_0)'$.
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof intuition of Theorem 2.4
+
+Use first-order Taylor expansion around $\theta_0$:
+
+$$
+g(\hat\theta)=g(\theta_0)+G(\hat\theta-\theta_0)+r_n,
+$$
+
+where the remainder $r_n=o_p(n^{-1/2})$. Multiply by $\sqrt{n}$ and apply Slutsky's theorem.
+
+$\blacksquare$
+:::
+
+In practice, plug in estimates:
+
+$$
+\widehat{\text{Var}}(g(\hat\theta)) = G(\hat\theta)\,\widehat\Sigma\,G(\hat\theta)'. \tag{2.14}
+$$
+
+---
+
+## Asymptotic Inference Workflow {#sec-asymptotics-workflow}
+
+For most estimators, inference follows this pattern:
+
+1. Prove consistency via LLN + continuous mapping.
+2. Prove asymptotic normality via CLT + Slutsky.
+3. Estimate asymptotic variance (homoskedastic, robust, cluster, or HAC).
+4. Build Wald-type confidence intervals and tests.
+
+This is why estimator chapters are modular: OLS, MLE, and GMM differ in objective functions, but their large-sample logic is structurally similar.
+
+---
+
+## Interactive Simulation {#sec-asymptotics-simulation}
+
+The simulation below draws repeated samples from a skewed population and shows how the sampling distribution of the mean becomes approximately normal as $n$ grows.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 600
+#| echo: false
+
+# Simulation: sample size and asymptotic normality of the sample mean
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=20, max=2000, value=80, step=20),
+            ui.input_slider("reps", "Monte Carlo replications", min=200, max=5000, value=1200, step=100),
+            ui.input_slider("skew", "Population skew intensity", min=0.5, max=3.0, value=1.5, step=0.1),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Interpretation:** With larger n, the distribution of "
+                "sqrt(n)(mean - mu) gets closer to normal."
+            ),
+            width=320,
+        ),
+        ui.output_plot("clt_plot"),
+    ),
+)
+
+
+def server(input, output, session):
+    @reactive.calc
+    def simulate():
+        input.resample()
+        n = input.n()
+        reps = input.reps()
+        skew = input.skew()
+
+        # Exponential family -> skewed population
+        # Mean = 1/skew, Var = 1/skew^2
+        samples = np.random.exponential(scale=1.0 / skew, size=(reps, n))
+        means = samples.mean(axis=1)
+        mu = 1.0 / skew
+        sigma = 1.0 / skew
+        z = np.sqrt(n) * (means - mu) / sigma
+
+        return means, z, mu
+
+    @render.plot
+    def clt_plot():
+        try:
+            means, z, mu = simulate()
+
+            fig, axes = plt.subplots(1, 2, figsize=(10, 4.4))
+
+            # Left panel: sample mean distribution
+            axes[0].hist(means, bins=35, density=True, color="#4a7fb5", alpha=0.75,
+                         edgecolor="white", linewidth=0.5)
+            axes[0].axvline(mu, color="#2d2d2d", linestyle="--", linewidth=1.5, label="True mean")
+            axes[0].set_title("Sampling distribution of mean", fontsize=12, fontweight="bold")
+            axes[0].set_xlabel("Sample mean", fontsize=11)
+            axes[0].set_ylabel("Density", fontsize=11)
+            axes[0].legend(fontsize=8.5)
+
+            # Right panel: standardized means vs normal
+            axes[1].hist(z, bins=35, density=True, color="#7c9f65", alpha=0.75,
+                         edgecolor="white", linewidth=0.5, label="Simulated")
+            x = np.linspace(-4, 4, 400)
+            normal_pdf = (1.0 / np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * x**2)
+            axes[1].plot(x, normal_pdf, color="#d94f4f", linewidth=2.0, label="N(0,1)")
+            axes[1].set_title("Standardized mean and CLT", fontsize=12, fontweight="bold")
+            axes[1].set_xlabel("sqrt(n) * (mean - mu) / sigma", fontsize=11)
+            axes[1].set_ylabel("Density", fontsize=11)
+            axes[1].legend(fontsize=8.5)
+
+            # Summary box
+            txt = (
+                "E[mean] (sim) = {:.4f}\n"
+                "SD[mean] (sim)= {:.4f}\n"
+                "mean(z)      = {:.4f}\n"
+                "sd(z)        = {:.4f}"
+            ).format(
+                means.mean(),
+                means.std(ddof=1),
+                z.mean(),
+                z.std(ddof=1),
+            )
+            axes[1].text(
+                0.03, 0.97, txt,
+                transform=axes[1].transAxes,
+                fontsize=8.5,
+                va="top",
+                fontfamily="monospace",
+                bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor="#cccccc", alpha=0.95),
+            )
+
+            plt.tight_layout()
+            return fig
+        except Exception as err:
+            fig, ax = plt.subplots(figsize=(8, 3))
+            ax.axis("off")
+            ax.text(0.02, 0.75, "Simulation error", fontsize=12, fontweight="bold")
+            ax.text(0.02, 0.50, str(err), fontsize=10)
+            ax.text(0.02, 0.25, "Click Resample after adjusting parameters.", fontsize=10)
+            return fig
+
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-asymptotics-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| Theorem 2.1 (LLN) | i.i.d. + finite first moment | Sample averages converge in probability to population moments |
+| OLS consistency sketch | Exogeneity + full rank + LLN conditions | $\hat\beta \xrightarrow{p} \beta$ |
+| Theorem 2.2 (CLT) | i.i.d. + finite variance | Centered and scaled sample averages converge to normal |
+| Theorem 2.3 (OLS asymptotic normality) | LLN + CLT + regularity conditions | $\sqrt{n}(\hat\beta-\beta)$ is asymptotically Gaussian |
+| Theorem 2.4 (Delta method) | Differentiable transform + asymptotic normal base estimator | Nonlinear functions of estimators inherit asymptotic normality |
+
+Large-sample theory is the common language across modern econometrics: first show convergence, then characterize uncertainty, then choose a variance estimator appropriate to the data-generating environment.

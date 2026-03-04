@@ -1,0 +1,28 @@
+---
+title: "Generalized Method of Moments"
+description: "Moment conditions, weighting matrices, overidentification, and links to OLS/IV."
+---
+
+## Motivation {#sec-gmm-motivation}
+
+*This chapter is under development.* It will present GMM as a unifying estimation framework that contains OLS and IV as special cases and scales to richer models.
+
+### What You Will Learn
+
+- How moment conditions identify unknown parameters
+- One-step and two-step GMM estimators
+- Efficient weighting and overidentification tests
+- Connections among OLS, IV/2SLS, and GMM
+
+---
+
+::: {.callout-note}
+## Coming Soon
+
+This chapter will include:
+
+- **Intuition** — “Match sample moments to model moments.”
+- **Formalization** — Moment vectors, objective functions, and optimal weights.
+- **Proofs** — Consistency, asymptotic normality, and J-test logic (collapsed by default).
+- **Interactive code** — GMM estimator behavior under valid and invalid moments.
+:::

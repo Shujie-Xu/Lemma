@@ -1,0 +1,24 @@
+# Quarto output
+_site/
+.quarto/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node (if any tooling added later)
+node_modules/
+
+/.quarto/
+**/*.quarto_ipynb

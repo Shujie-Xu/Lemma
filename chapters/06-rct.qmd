@@ -1,0 +1,444 @@
+---
+title: "Randomized Controlled Trials"
+description: "Random assignment, experimental estimators, compliance, threats to validity, and power analysis."
+---
+
+## Motivation {#sec-rct-motivation}
+
+The cleanest solution to the selection problem introduced in [Selection Bias and CIA](00-selection-bias-cia.qmd) is to remove selection altogether: randomly assign treatment.
+
+When an experimenter flips a coin to decide who receives a program and who does not, the assignment mechanism is known, controlled, and independent of potential outcomes. Treated and control groups are comparable in expectation---not just on observed covariates, but on everything, observed and unobserved. No functional-form assumption is needed. No exclusion restriction. No parallel-trends defense. Randomization does the work.
+
+This makes the RCT the benchmark causal design: other identification strategies (IV, DiD, RDD) are evaluated by how close they come to what an experiment would deliver. But experiments are not automatic. Imperfect compliance, differential attrition, spillovers, and underpowered samples can erode the experimental advantage. This chapter formalizes what randomization buys, how to estimate treatment effects with and without full compliance, what threatens experimental validity, and how to design an adequately powered trial.
+
+---
+
+## Random Assignment and Identification {#sec-rct-identification}
+
+For each unit $i$, define potential outcomes $Y_i(1)$ (treated) and $Y_i(0)$ (untreated), and let $D_i \in \{0,1\}$ denote treatment status. The observed outcome is $Y_i = D_i Y_i(1) + (1-D_i)Y_i(0)$.
+
+### Assumptions {#sec-rct-assumptions}
+
+| ID | Name | Statement | Role |
+|---|---|---|---|
+| RCT.1 | **Random assignment** | $(Y_i(0), Y_i(1)) \perp D_i$ | Treatment is independent of potential outcomes; eliminates selection bias |
+| RCT.2 | **SUTVA** | $Y_i = Y_i(D_i)$; no interference across units | Each unit's outcome depends only on its own treatment status |
+| RCT.3 | **Overlap** | $0 < \mathbb{P}(D_i=1) < 1$ | Both treatment and control are observed |
+
+RCT.1 is the defining feature. It says that the mechanism generating $D_i$ is independent of the potential outcomes. Under simple randomization with probability $p$, each unit has the same chance of treatment regardless of its characteristics.
+
+::: {.callout-warning}
+## What Randomization Does *Not* Guarantee
+
+Random assignment guarantees balance *in expectation*, not in every realization. A single draw can produce covariate imbalance by chance. This is why balance tables are reported and stratified randomization is recommended in practice. Randomization also says nothing about external validity: results from one sample may not generalize to a different population or context.
+:::
+
+### Identification of the ATE {#sec-rct-ate-identification}
+
+::: {.callout-note}
+## Theorem 6.1 (Unbiasedness of the Difference in Means)
+
+Under RCT.1--RCT.3, the difference in sample means
+
+$$
+\hat{\tau} = \bar{Y}_T - \bar{Y}_C = \frac{1}{n_T}\sum_{i:D_i=1} Y_i - \frac{1}{n_C}\sum_{i:D_i=0} Y_i \tag{6.1}
+$$
+
+is an unbiased estimator of the Average Treatment Effect $\text{ATE} = \mathbb{E}[Y(1) - Y(0)]$.
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 6.1
+
+**Step 1.** By SUTVA, $\mathbb{E}[Y \mid D=1] = \mathbb{E}[Y(1) \mid D=1]$ and $\mathbb{E}[Y \mid D=0] = \mathbb{E}[Y(0) \mid D=0]$.
+
+**Step 2.** By random assignment (RCT.1):
+
+$$
+\mathbb{E}[Y(1) \mid D=1] = \mathbb{E}[Y(1)], \qquad \mathbb{E}[Y(0) \mid D=0] = \mathbb{E}[Y(0)].
+$$
+
+**Step 3.** Therefore:
+
+$$
+\mathbb{E}[\hat{\tau}] = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)] = \text{ATE}.
+$$
+
+Compare with the decomposition from [Selection Bias and CIA](00-selection-bias-cia.qmd): the selection bias term $\mathbb{E}[Y(0)\mid D=1] - \mathbb{E}[Y(0)\mid D=0]$ is exactly zero under RCT.1. $\blacksquare$
+:::
+
+The standard error of $\hat{\tau}$ under independent sampling is
+
+$$
+\text{SE}(\hat{\tau}) = \sqrt{\frac{s_T^2}{n_T} + \frac{s_C^2}{n_C}}, \tag{6.2}
+$$
+
+where $s_T^2$ and $s_C^2$ are the sample variances in the treatment and control groups.
+
+---
+
+## Estimation Strategies {#sec-rct-estimation}
+
+### Difference in Means via Regression {#sec-rct-regression}
+
+The simplest regression for an RCT is
+
+$$
+Y_i = \alpha + \tau D_i + \varepsilon_i. \tag{6.3}
+$$
+
+The OLS estimate of $\tau$ is numerically identical to $\bar{Y}_T - \bar{Y}_C$. The regression framework is convenient because it extends naturally to covariates and produces standard errors directly.
+
+### Regression Adjustment for Precision {#sec-rct-covariate-adjustment}
+
+Adding pre-treatment covariates $X_i$ to the regression does not change the unbiasedness of $\hat{\tau}$ (because $D$ is independent of $X$ by design), but it reduces the residual variance and tightens confidence intervals:
+
+$$
+Y_i = \alpha + \tau D_i + X_i'\beta + \varepsilon_i. \tag{6.4}
+$$
+
+Lin (2013) shows that including treatment-covariate interactions $D_i \times (X_i - \bar{X})$ provides robust efficiency gains without relying on correct specification of the covariate model. If randomization was stratified, Freedman (2008) recommends including strata fixed effects for correct inference.
+
+### ANCOVA {#sec-rct-ancova}
+
+When a baseline measure of the outcome $Y_{i,\text{pre}}$ is available, the ANCOVA specification
+
+$$
+Y_{i,\text{post}} = \alpha + \tau D_i + \gamma Y_{i,\text{pre}} + \varepsilon_i \tag{6.5}
+$$
+
+controls for the pre-treatment level. McKenzie (2012) shows that ANCOVA is generally more efficient than a difference-in-differences approach when the autocorrelation of the outcome is moderate. The precision gain is equivalent to increasing the sample size by a factor of $1/(1-R^2)$, where $R^2$ is the share of outcome variance explained by the baseline measure.
+
+---
+
+## Non-Compliance: ITT, TOT, and LATE {#sec-rct-compliance}
+
+In practice, assignment does not always equal receipt. Some units assigned to treatment never take it up (*never-takers*); some assigned to control access treatment anyway (*always-takers*). Let $Z_i$ denote random assignment and $D_i$ denote actual treatment received.
+
+### Compliance Types {#sec-rct-compliance-types}
+
+Under the monotonicity assumption---no unit does the opposite of its assignment---the population partitions into four latent groups:
+
+| Type | $D_i$ if $Z_i=1$ | $D_i$ if $Z_i=0$ | Description |
+|---|---|---|---|
+| **Complier** | 1 | 0 | Takes treatment if and only if assigned |
+| **Always-taker** | 1 | 1 | Takes treatment regardless |
+| **Never-taker** | 0 | 0 | Refuses treatment regardless |
+| **Defier** | 0 | 1 | Does the opposite; ruled out by monotonicity |
+
+### ITT, TOT, and the Wald Estimator {#sec-rct-itt-tot}
+
+The **Intention-to-Treat** (ITT) effect compares outcomes by *assignment*, regardless of compliance:
+
+$$
+\text{ITT} = \mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]. \tag{6.6}
+$$
+
+ITT is always identified under randomization and measures the policy-relevant effect of *offering* a program. With imperfect compliance, ITT is attenuated toward zero relative to the treatment effect on those who actually comply.
+
+The **Treatment-on-the-Treated** effect for compliers is recovered by the **Wald estimator**:
+
+$$
+\hat{\tau}_{\text{LATE}} = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]} = \frac{\text{ITT}}{\text{First Stage}}. \tag{6.7}
+$$
+
+This is numerically identical to 2SLS using $Z$ as an instrument for $D$ (see [Instrumental Variables](03-iv.qmd)).
+
+::: {.callout-note}
+## Theorem 6.2 (Wald Estimator Identifies LATE)
+
+Under RCT.1--RCT.3 plus:
+
+- **Relevance**: $\mathbb{E}[D \mid Z=1] \neq \mathbb{E}[D \mid Z=0]$ (assignment affects take-up)
+- **Exclusion**: $Z$ affects $Y$ only through $D$
+- **Monotonicity**: $D_i(1) \geq D_i(0)$ for all $i$ (no defiers)
+
+the Wald estimator identifies the Local Average Treatment Effect (LATE):
+
+$$
+\hat{\tau}_{\text{LATE}} \xrightarrow{p} \mathbb{E}[Y_i(1) - Y_i(0) \mid \text{complier}]. \tag{6.8}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 6.2
+
+**Step 1.** By random assignment, the ITT numerator is:
+
+$$
+\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0] = \mathbb{E}[Y(1) - Y(0) \mid \text{complier}] \cdot \mathbb{P}(\text{complier}).
+$$
+
+To see this, decompose by compliance type. Always-takers have $D(1) = D(0) = 1$, so their $Y$ is the same under $Z=1$ and $Z=0$. Never-takers have $D(1) = D(0) = 0$, same logic. Only compliers switch treatment status when $Z$ changes, contributing $\mathbb{E}[Y(1) - Y(0) \mid \text{complier}]$ to the ITT.
+
+**Step 2.** The first stage is:
+
+$$
+\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0] = \mathbb{P}(\text{complier}).
+$$
+
+Again, only compliers change $D$ in response to $Z$.
+
+**Step 3.** Dividing:
+
+$$
+\frac{\text{ITT}}{\text{First Stage}} = \frac{\mathbb{E}[Y(1) - Y(0) \mid \text{complier}] \cdot \mathbb{P}(\text{complier})}{\mathbb{P}(\text{complier})} = \mathbb{E}[Y(1) - Y(0) \mid \text{complier}].
+$$
+
+$\blacksquare$
+:::
+
+::: {.callout-warning}
+## Weak First Stage
+
+When compliance is low, the denominator of the Wald estimator is small, making LATE estimates noisy and potentially biased in finite samples. If the first-stage F-statistic is below 10, treat IV/LATE results with caution and consider reporting ITT as the primary result. See [IV diagnostics](03-iv.qmd#sec-iv-weak) for more on weak instruments.
+:::
+
+---
+
+## Threats to Validity {#sec-rct-threats}
+
+### Attrition {#sec-rct-attrition}
+
+Units that drop out between baseline and endline break the experimental balance if attrition is correlated with treatment assignment (*differential attrition*).
+
+**Detection:**
+
+- Compare attrition rates across treatment and control
+- Compare baseline characteristics of attritors vs.\ non-attritors by group
+- Use Lee (2009) bounds to provide worst-case treatment effect estimates under attrition
+
+**Prevention:** Track participants aggressively; keep surveys short; collect multiple contact methods at baseline; provide incentives for follow-up.
+
+### Spillovers and SUTVA Violations {#sec-rct-spillovers}
+
+If treated units affect the outcomes of control units---through information sharing, resource transfers, or market-level price changes---SUTVA (RCT.2) is violated and the simple treated-control comparison underestimates or overestimates the true effect.
+
+**Design solutions:**
+
+- Cluster-randomize at a level above which spillovers are unlikely (villages, schools, markets)
+- Create buffer zones between treated and control areas
+- Randomize treatment *intensity* at the cluster level to directly measure spillover effects
+
+Miguel and Kremer (2004) document substantial deworming spillovers through school-level health externalities---a canonical example of why SUTVA cannot be taken for granted.
+
+### Hawthorne and John Henry Effects {#sec-rct-behavioral}
+
+- **Hawthorne effect**: Treatment group changes behavior because of being observed, not because of the treatment itself
+- **John Henry effect**: Control group compensates by exerting extra effort
+
+Both bias the treatment-control contrast. Placebo treatments, blinded designs, and use of administrative data (rather than self-reports) help mitigate these threats.
+
+---
+
+## Power Analysis {#sec-rct-power}
+
+An underpowered trial is wasteful: it cannot detect a real effect even if one exists. Power analysis determines the sample size needed to detect a meaningful effect at a given significance level.
+
+### Core Formula {#sec-rct-power-formula}
+
+**Power** is the probability of rejecting $H_0: \tau = 0$ when the true effect is $\tau = \delta$:
+
+$$
+\text{Power} = 1 - \beta = \mathbb{P}\left(\text{reject } H_0 \mid \tau = \delta\right). \tag{6.9}
+$$
+
+For individual-level randomization with equal allocation ($n_T = n_C = N/2$), a continuous outcome, and two-sided test at level $\alpha$:
+
+$$
+N = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot 4\sigma^2}{\delta^2}, \tag{6.10}
+$$
+
+where $z_q$ is the $q$-th quantile of the standard normal. At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$, giving $N \approx 16\sigma^2/\delta^2$ per group. A standardized effect of $0.2$ requires roughly $400$ per group; an effect of $0.5$ requires about $64$.
+
+Adding covariates via ANCOVA reduces the required sample size to
+
+$$
+N_{\text{adj}} = N \cdot (1 - R^2), \tag{6.11}
+$$
+
+where $R^2$ is the share of outcome variance explained by baseline covariates. A covariate explaining $30\%$ of variance is equivalent to a $30\%$ increase in sample size---free power.
+
+### Cluster Randomization {#sec-rct-power-cluster}
+
+When randomization is at the cluster level (villages, schools, clinics), within-cluster correlation inflates the required sample. The **design effect** is
+
+$$
+\text{DEFF} = 1 + (m - 1)\rho, \tag{6.12}
+$$
+
+where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$.
+
+Even a seemingly small $\rho = 0.05$ with $m = 100$ units per cluster gives $\text{DEFF} \approx 6$: you need roughly six times as many observations as under individual randomization. When $m$ is large, $N_{\text{eff}} \approx J/\rho$ where $J$ is the number of clusters. The binding constraint is always the number of clusters, not cluster size.
+
+**Typical ICC values** in development economics: health outcomes ($0.01$--$0.05$), education test scores ($0.10$--$0.25$), income ($0.02$--$0.10$).
+
+### Minimum Detectable Effect {#sec-rct-mde}
+
+Given a fixed sample size, the smallest effect detectable at power $1-\beta$ is:
+
+$$
+\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.13}
+$$
+
+For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
+
+### Strategies to Increase Power {#sec-rct-power-strategies}
+
+1. **More clusters** (not more units per cluster) in cluster-randomized trials
+2. **Baseline covariates** via ANCOVA to reduce residual variance
+3. **Stratified randomization** on variables correlated with the outcome
+4. **Multiple follow-up rounds** for panel-data designs
+5. **More precise outcome measures** (administrative data over self-reports)
+
+---
+
+## Experimental Design Choices {#sec-rct-design}
+
+### Randomization Methods {#sec-rct-randomization-methods}
+
+**Simple randomization** assigns each unit independently with fixed probability. Transparent and valid, but can produce covariate imbalance in small samples.
+
+**Stratified randomization** divides units into strata based on pre-treatment covariates, then randomizes within each stratum. This guarantees balance on stratification variables and can reduce variance by $20$--$30\%$ or more when the stratification variables predict the outcome. Bruhn and McKenzie (2009) show it rarely hurts and often substantially helps. Analysis should include strata fixed effects.
+
+**Pairwise matching** is the extreme case: create pairs of similar units, randomize one to treatment within each pair. Maximum precision for a given sample size, but loss of one unit in a pair loses the entire pair.
+
+### Phase-In and Encouragement Designs {#sec-rct-alternative-designs}
+
+**Phase-in (stepped wedge)**: All units eventually receive treatment; randomize the *order*. Ethically appealing and politically feasible, but precludes long-run untreated comparisons and is susceptible to anticipation effects.
+
+**Encouragement design**: When mandating treatment is unethical or infeasible, randomize an *encouragement* (information, subsidy, invitation) and use it as an instrument for actual take-up. Estimates LATE for compliers, not ATE for the full population (see [Instrumental Variables](03-iv.qmd) for the IV framework).
+
+---
+
+## Interactive Simulation {#sec-rct-simulation}
+
+The app below simulates a randomized trial with adjustable sample size, treatment effect, and compliance rate. With perfect compliance, the simple difference in means recovers the ATE. As compliance falls, the ITT is attenuated toward zero and the Wald/IV estimator recovers the LATE for compliers.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 620
+#| echo: false
+
+# Simulation: RCT with compliance, ITT vs LATE
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=200, max=5000, value=1000, step=100),
+            ui.input_slider("tau", "True LATE (effect on compliers)", min=0.0, max=3.0, value=1.5, step=0.1),
+            ui.input_slider("comply", "Compliance rate", min=0.1, max=1.0, value=0.7, step=0.05),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Try:** Lower compliance to see ITT shrink toward zero "
+                "while the Wald/IV estimator still recovers the LATE."
+            ),
+            width=320,
+        ),
+        ui.output_plot("rct_plot"),
+    ),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def run_trial():
+        input.resample()
+        n = input.n()
+        tau = input.tau()
+        comply_rate = input.comply()
+
+        # Random assignment (50-50)
+        z = np.random.binomial(1, 0.5, n)
+
+        # Compliance: compliers take up if assigned; never-takers don't
+        is_complier = np.random.binomial(1, comply_rate, n)
+        d = z * is_complier  # one-sided non-compliance
+
+        # Potential outcomes (constant effect for compliers)
+        y0 = np.random.normal(5, 2, n)
+        y1 = y0 + tau * is_complier  # only compliers benefit
+        y = d * y1 + (1 - d) * y0
+
+        return z, d, y, tau
+
+    @render.plot
+    def rct_plot():
+        z, d, y, tau_true = run_trial()
+
+        # ITT: compare by assignment
+        itt = y[z == 1].mean() - y[z == 0].mean()
+
+        # First stage: compliance rate
+        first_stage = d[z == 1].mean() - d[z == 0].mean()
+
+        # Wald / IV estimator
+        wald = itt / first_stage if abs(first_stage) > 0.001 else np.nan
+
+        # Naive (compare by actual treatment)
+        if d.sum() > 0 and (1 - d).sum() > 0:
+            naive = y[d == 1].mean() - y[d == 0].mean()
+        else:
+            naive = np.nan
+
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4.3))
+
+        # Panel 1: estimator comparison
+        labels = ["ITT", "Wald/IV\n(LATE)", "True\nLATE"]
+        vals = [itt, wald, tau_true]
+        colors = ["#4a7fb5", "#4f9a68", "#2d2d2d"]
+        axes[0].bar(labels, vals, color=colors, alpha=0.9, width=0.5)
+        axes[0].axhline(tau_true, color="#2d2d2d", linestyle="--", linewidth=1.2)
+        axes[0].set_ylabel("Estimated effect", fontsize=11)
+        axes[0].set_title("ITT vs LATE", fontsize=12, fontweight="bold")
+
+        info = (
+            "True LATE     = {:.3f}\n"
+            "ITT           = {:.3f}\n"
+            "First stage   = {:.3f}\n"
+            "Wald (LATE)   = {:.3f}"
+        ).format(tau_true, itt, first_stage, wald)
+        axes[0].text(
+            0.03, 0.97, info,
+            transform=axes[0].transAxes, fontsize=8.5, va="top",
+            fontfamily="monospace",
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                      edgecolor="#cccccc", alpha=0.95),
+        )
+
+        # Panel 2: outcome distributions by assignment
+        bins = np.linspace(y.min(), y.max(), 35)
+        axes[1].hist(y[z == 0], bins=bins, alpha=0.45, density=True,
+                     label="Y | Z=0 (control)", color="#7aa6d1")
+        axes[1].hist(y[z == 1], bins=bins, alpha=0.45, density=True,
+                     label="Y | Z=1 (assigned)", color="#d98b8b")
+        axes[1].set_xlabel("Outcome Y", fontsize=11)
+        axes[1].set_ylabel("Density", fontsize=11)
+        axes[1].set_title("Outcomes by Assignment", fontsize=12, fontweight="bold")
+        axes[1].legend(fontsize=8.5)
+
+        plt.tight_layout()
+        return fig
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-rct-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| **Theorem 6.1** (Difference in means) | RCT.1--RCT.3 (random assignment, SUTVA, overlap) | $\hat{\tau} = \bar{Y}_T - \bar{Y}_C$ is unbiased for ATE |
+| Regression adjustment | RCT.1--RCT.3 + pre-treatment covariates | Same $\hat{\tau}$, tighter confidence intervals |
+| ANCOVA | RCT.1--RCT.3 + baseline outcome measure | Precision gain equivalent to $1/(1-R^2)$ increase in $N$ |
+| **Theorem 6.2** (Wald/LATE) | RCT.1--RCT.3 + relevance, exclusion, monotonicity | ITT / first stage identifies LATE for compliers |
+| Cluster design effect | Cluster randomization with ICC $\rho$ | Effective $N$ reduced by factor $1 + (m-1)\rho$ |
+
+The experimental ideal is simple: randomize, compare means, done. Real experiments are messier. Compliance is imperfect, attrition is differential, spillovers violate SUTVA, and samples are finite. Each complication has a well-defined response---IV for non-compliance, Lee bounds for attrition, cluster randomization for spillovers, power analysis for sample design---but none is automatic. The experimenter's job is to anticipate these threats at the design stage, not to fix them after the data are collected.
+
+When full randomization is not feasible, the designs in [Instrumental Variables](03-iv.qmd), [Difference-in-Differences](04-did.qmd), [Regression Discontinuity](05-rdd.qmd), and [Synthetic Control](08-synthetic-control.qmd) offer alternatives that trade the experimental ideal for identification under weaker but still explicit assumptions.

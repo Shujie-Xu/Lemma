@@ -1,0 +1,28 @@
+---
+title: "Maximum Likelihood Estimation"
+description: "Likelihood principle, score equations, asymptotic theory, and nonlinear models."
+---
+
+## Motivation {#sec-mle-motivation}
+
+*This chapter is under development.* It will show how maximum likelihood provides a general estimation framework beyond linear regression and underpins models like logit and probit.
+
+### What You Will Learn
+
+- How likelihood links model assumptions to estimation
+- Score, Hessian, and first-order conditions
+- Consistency and asymptotic normality of MLE
+- Why MLE and OLS coincide in the Gaussian linear model
+
+---
+
+::: {.callout-note}
+## Coming Soon
+
+This chapter will include:
+
+- **Intuition** — “Most plausible parameter” as an estimation rule.
+- **Formalization** — Log-likelihood, score vector, information matrix.
+- **Proofs** — MLE asymptotics under regularity conditions (collapsed by default).
+- **Interactive code** — Likelihood surface explorer for normal and binary-choice models.
+:::

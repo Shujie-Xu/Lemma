@@ -1,0 +1,169 @@
+/*-- scss:defaults --*/
+
+// Typography
+$font-family-sans-serif: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+$font-family-monospace: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+$font-family-base: Georgia, "Times New Roman", serif;
+
+$font-size-base: 1.12rem;
+$line-height-base: 1.85;
+$headings-font-family: $font-family-sans-serif;
+$headings-font-weight: 600;
+$headings-line-height: 1.3;
+
+// Spacing
+$paragraph-margin-bottom: 1.25rem;
+$spacer: 1.2rem;
+
+// Colors — functional, restrained
+$body-color: #1a1a2e;
+$body-bg: #fcfcfc;
+$link-color: #2a5a8a;
+$link-hover-color: #1a3a5a;
+
+// Code
+$code-font-size: 0.96em;
+$code-color: #4a5568;
+
+// Callouts
+$callout-border-width: 3px;
+
+/*-- scss:rules --*/
+
+// Body text: generous, readable
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// Headings: clean sans-serif
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-sans-serif;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+// Proof blocks — collapsed by default, distinct styling
+.callout-tip {
+  border-left-color: #6366f1 !important;
+  background-color: #f8f7ff;
+
+  .callout-header {
+    font-family: $font-family-sans-serif;
+    font-weight: 500;
+  }
+}
+
+// Definition/theorem blocks
+.callout-note {
+  border-left-color: #2563eb !important;
+  background-color: #f0f5ff;
+}
+
+// Warning/assumption blocks
+.callout-warning {
+  border-left-color: #d97706 !important;
+  background-color: #fffbeb;
+}
+
+// Important blocks
+.callout-important {
+  border-left-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+
+// Math display: centered with breathing room
+.math.display {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+// Code blocks: clean
+div.sourceCode {
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin: 1.2rem 0;
+}
+
+pre.sourceCode {
+  padding: 1rem;
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+// Tables: academic, clean
+table {
+  font-family: $font-family-sans-serif;
+  font-size: 0.92rem;
+  margin: 1.5rem 0;
+}
+
+thead th {
+  border-bottom: 2px solid #1a1a2e;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+}
+
+tbody td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+// Sidebar navigation: clean
+.sidebar-title {
+  font-family: $font-family-sans-serif;
+  font-weight: 600;
+}
+
+// TOC: right side
+#TOC {
+  font-family: $font-family-sans-serif;
+  font-size: 0.92rem;
+}
+
+// Shinylive blocks: contained
+.shinylive-wrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+// Footer
+.nav-footer {
+  font-family: $font-family-sans-serif;
+  font-size: 0.85rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+// Blockquotes: subtle
+blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 1rem;
+  color: #475569;
+  font-style: italic;
+}
+
+// Equation numbering
+.MathJax_Display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}

@@ -1,0 +1,144 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "chapters/"
+    - "problem-sets/"
+    - "!dev_docs/"
+
+website:
+  title: "Lemma"
+  description: "An open-source econometrics learning site — narrative proofs, interactive code, rigorous theory."
+  repo-url: https://github.com/xushujie/lemma
+  repo-actions: [edit, issue]
+  search:
+    location: navbar
+    type: overlay
+
+  navbar:
+    background: light
+    left:
+      - text: "Foundations"
+        menu:
+          - text: "Selection Bias and CIA"
+            href: chapters/00-selection-bias-cia.qmd
+      - text: "Estimation & Regression"
+        menu:
+          - text: "OLS Foundations"
+            href: chapters/01-ols.qmd
+          - text: "Large-Sample Theory"
+            href: chapters/02-asymptotics.qmd
+          - text: "Maximum Likelihood Estimation"
+            href: chapters/09-mle.qmd
+          - text: "Generalized Method of Moments"
+            href: chapters/10-gmm.qmd
+      - text: "Causal Designs"
+        menu:
+          - text: "Randomized Controlled Trials"
+            href: chapters/06-rct.qmd
+          - text: "Instrumental Variables"
+            href: chapters/03-iv.qmd
+          - text: "Difference-in-Differences"
+            href: chapters/04-did.qmd
+          - text: "Regression Discontinuity"
+            href: chapters/05-rdd.qmd
+          - text: "Synthetic Control"
+            href: chapters/08-synthetic-control.qmd
+      - text: "Advanced Inference"
+        menu:
+          - text: "Standard Errors in Practice"
+            href: chapters/07-standard-errors.qmd
+      - text: "Problem Sets"
+        href: problem-sets/index.qmd
+      - text: "References"
+        href: references.qmd
+    right:
+      - icon: github
+        href: https://github.com/xushujie/lemma
+        aria-label: GitHub
+
+  sidebar:
+    - title: "Foundations"
+      style: docked
+      contents:
+        - text: "Selection Bias and CIA"
+          href: chapters/00-selection-bias-cia.qmd
+
+    - title: "Estimation & Regression"
+      style: docked
+      contents:
+        - text: "OLS Foundations"
+          href: chapters/01-ols.qmd
+        - text: "Large-Sample Theory"
+          href: chapters/02-asymptotics.qmd
+        - text: "Maximum Likelihood Estimation"
+          href: chapters/09-mle.qmd
+        - text: "Generalized Method of Moments"
+          href: chapters/10-gmm.qmd
+
+    - title: "Causal Designs"
+      style: docked
+      contents:
+        - text: "Randomized Controlled Trials"
+          href: chapters/06-rct.qmd
+        - text: "Instrumental Variables"
+          href: chapters/03-iv.qmd
+        - text: "Difference-in-Differences"
+          href: chapters/04-did.qmd
+        - text: "Regression Discontinuity"
+          href: chapters/05-rdd.qmd
+        - text: "Synthetic Control"
+          href: chapters/08-synthetic-control.qmd
+
+    - title: "Advanced Inference"
+      style: docked
+      contents:
+        - text: "Standard Errors in Practice"
+          href: chapters/07-standard-errors.qmd
+
+    - title: "Problem Sets"
+      style: docked
+      contents:
+        - text: "Overview"
+          href: problem-sets/index.qmd
+
+  page-footer:
+    center: |
+      Built with [Quarto](https://quarto.org/) · Content licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · Code licensed [MIT](https://opensource.org/licenses/MIT)
+
+format:
+  html:
+    embed-resources: false
+    self-contained: false
+    page-layout: full
+    grid:
+      sidebar-width: 280px
+      body-width: 1100px
+      margin-width: 280px
+      gutter-width: 1.8rem
+    theme:
+      light: [cosmo, styles/custom.scss]
+      dark: [darkly, styles/custom-dark.scss]
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    html-math-method: mathjax
+    code-copy: true
+    smooth-scroll: true
+    mainfont: "Georgia, 'Times New Roman', serif"
+    monofont: "'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace"
+    include-in-header:
+      - text: |
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+
+execute:
+  freeze: auto
+  warning: false
+
+filters:
+  - shinylive
+
+bibliography: references.bib

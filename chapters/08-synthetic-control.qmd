@@ -1,0 +1,28 @@
+---
+title: "Synthetic Control"
+description: "Counterfactual construction with donor pools, weighting, and diagnostics."
+---
+
+## Motivation {#sec-synthetic-control-motivation}
+
+*This chapter is under development.* It will introduce synthetic control as a frontier comparative case-study design for policy evaluation with aggregate units.
+
+### What You Will Learn
+
+- Why single treated-unit settings challenge DiD
+- How donor-pool weights build a synthetic counterfactual
+- Pre-treatment fit diagnostics and placebo tests
+- Practical limits: extrapolation, donor contamination, and anticipation
+
+---
+
+::: {.callout-note}
+## Coming Soon
+
+This chapter will include:
+
+- **Intuition** — Why “best weighted control” can be credible.
+- **Formalization** — Optimization setup, constraints, and fit criteria.
+- **Proofs** — Identification logic and placebo-based inference interpretation (collapsed by default).
+- **Interactive code** — Synthetic policy evaluation with adjustable donor pool quality.
+:::

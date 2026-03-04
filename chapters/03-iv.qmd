@@ -1,0 +1,327 @@
+---
+title: "Instrumental Variables"
+description: "Endogeneity, exclusion restriction, 2SLS derivation, weak instruments, and practical diagnostics."
+---
+
+## Motivation {#sec-iv-motivation}
+
+OLS is compelling because it is transparent and efficient under strong assumptions. The problem is that those assumptions are often exactly what policy questions violate. If treatment choice is related to unobserved ability, preferences, or risk, then regressors are correlated with the error term and OLS is biased.
+
+Instrumental Variables (IV) is the standard response when selection on unobservables breaks exogeneity. The core idea is simple: use a source of variation that shifts treatment but is otherwise unrelated to potential outcomes except through treatment.
+
+This chapter formalizes that idea, derives the IV estimator, and explains why relevance and exclusion are both non-negotiable. If you want the identification intuition first, revisit [Selection Bias and CIA](00-selection-bias-cia.qmd). If you want the estimation-unification perspective, connect this chapter to [Generalized Method of Moments](10-gmm.qmd).
+
+---
+
+## Setup and Identification Logic {#sec-iv-setup}
+
+Consider the structural equation with one endogenous regressor:
+
+$$
+Y_i = \beta X_i + u_i, \tag{3.1}
+$$
+
+where $\mathbb{E}[u_i\mid X_i] \neq 0$ may hold, so OLS is generally inconsistent.
+
+Let $Z_i$ be a candidate instrument. Two key conditions:
+
+1. **Relevance**:
+   $$
+   \text{Cov}(Z_i, X_i) \neq 0. \tag{3.2}
+   $$
+2. **Exogeneity (instrument uncorrelated with structural error)**:
+   $$
+   \text{Cov}(Z_i, u_i) = 0. \tag{3.3}
+   $$
+
+With one endogenous regressor and one instrument, the population moment condition can be written as
+
+$$
+\text{Cov}(Z_i, Y_i-\beta X_i)=0
+\Rightarrow
+\beta_0 = \frac{\text{Cov}(Z,Y)}{\text{Cov}(Z,X)}. \tag{3.4}
+$$
+
+::: {.callout-note}
+## Theorem 3.1 (Identification in Just-Identified IV)
+
+Under relevance and exclusion:
+
+$$
+\beta_0 = \frac{\text{Cov}(Z,Y)}{\text{Cov}(Z,X)}. \tag{3.5}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 3.1
+
+From (3.1), multiply by $Z$ and take expectations:
+
+$$
+\mathbb{E}[ZY] = \beta_0\mathbb{E}[ZX] + \mathbb{E}[Zu].
+$$
+
+By exclusion, $\mathbb{E}[Zu]=0$, so
+
+$$
+\beta_0 = \frac{\mathbb{E}[ZY]}{\mathbb{E}[ZX]}.
+$$
+
+Centering both numerator and denominator gives covariance form in (3.5). Relevance ensures denominator is nonzero. $\blacksquare$
+:::
+
+---
+
+## From Wald Estimator to 2SLS {#sec-iv-2sls}
+
+For binary instrument and treatment, (3.5) becomes the Wald ratio. In general linear settings, estimation is done by Two-Stage Least Squares (2SLS).
+
+### First Stage
+
+$$
+X = Z\pi + W\Gamma + v, \tag{3.6}
+$$
+
+where $W$ are exogenous controls and $Z$ are excluded instruments. Obtain fitted values $\hat X$.
+
+### Second Stage
+
+$$
+Y = \beta \hat X + W\delta + \text{error}. \tag{3.7}
+$$
+
+Let $Q=[Z\;W]$ be the full instrument matrix (excluded instruments plus included exogenous controls), and let $P_Q = Q(Q'Q)^{-1}Q'$. For the parameter vector in
+
+$$
+Y = X\theta + u, \qquad \theta=(\beta,\delta')',
+$$
+
+the 2SLS estimator is:
+
+$$
+\hat\theta_{2SLS} = (X'P_QX)^{-1}X'P_QY. \tag{3.8}
+$$
+
+Interpretation: 2SLS keeps only the variation in $X$ explained by $Z$, then regresses $Y$ on that instrument-driven component.
+
+::: {.callout-warning}
+## Why Not "Run OLS on Stage 2" Standard Errors?
+
+The second stage uses generated regressors ($\hat X$), so naive OLS standard errors are wrong. Use proper IV/2SLS variance estimators (and robust/cluster options when needed), discussed in [Standard Errors in Practice](07-standard-errors.qmd).
+:::
+
+---
+
+## Consistency and Weak Instruments {#sec-iv-consistency-weak}
+
+Under standard regularity conditions, 2SLS is consistent if instruments are valid and sufficiently strong.
+
+::: {.callout-note}
+## Theorem 3.2 (Consistency of IV/2SLS)
+
+If relevance holds in population and exclusion holds, then
+
+$$
+\hat\beta_{IV} \xrightarrow{p} \beta_0. \tag{3.9}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof sketch of Theorem 3.2
+
+**Note (scope of this sketch).** For intuition, this sketch shows the just-identified single-instrument case.
+In general 2SLS with instrument matrix $Q$ and projection $P_Q$, the key algebra is
+$\hat\theta_{2SLS}-\theta_0=(X'P_QX)^{-1}X'P_Qu$,
+and consistency follows by LLN applied to $n^{-1}X'P_QX$ and $n^{-1}X'P_Qu$ under valid moments and full-rank limits.
+
+Using sample moments:
+
+$$
+\hat\beta_{IV} = \frac{\frac{1}{n}\sum_i Z_iY_i}{\frac{1}{n}\sum_i Z_iX_i}
+= \beta_0 + \frac{\frac{1}{n}\sum_i Z_iu_i}{\frac{1}{n}\sum_i Z_iX_i}.
+$$
+
+By LLN,
+
+$$
+\frac{1}{n}\sum_i Z_iu_i \xrightarrow{p} \mathbb{E}[Zu]=0,
+\quad
+\frac{1}{n}\sum_i Z_iX_i \xrightarrow{p} \mathbb{E}[ZX] \neq 0.
+$$
+
+Apply Slutsky to conclude convergence to $\beta_0$. $\blacksquare$
+:::
+
+### Weak Instruments
+
+When first-stage relevance is weak, finite-sample IV bias increases and confidence intervals become unreliable.
+
+Common operational check: first-stage $F$-statistic on excluded instruments. As a practical rule of thumb, values well below 10 indicate potential weak-instrument risk; in that case, use weak-IV robust inference rather than relying on conventional Wald intervals.
+
+---
+
+## Practical Identification Checklist {#sec-iv-checklist}
+
+Before trusting IV estimates, ask:
+
+1. **Mechanism:** Is there a credible causal channel from $Z$ to $X$?
+2. **Exclusion story:** Why does $Z$ affect $Y$ only via $X$?
+3. **Balance diagnostics:** Does $Z$ look as-good-as-random on pre-treatment observables?
+4. **Strength:** Is first-stage relevance strong enough for stable inference?
+5. **Interpretation:** Is the target a local effect (LATE) rather than global ATE?
+
+If the exclusion story is weak, design-based alternatives in [Difference-in-Differences](04-did.qmd), [Regression Discontinuity](05-rdd.qmd), or [Synthetic Control](08-synthetic-control.qmd) may be more credible.
+
+---
+
+## Interactive Simulation {#sec-iv-simulation}
+
+The simulation below compares OLS and IV under configurable endogeneity, instrument strength, and exclusion violation.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 620
+#| echo: false
+
+# Simulation: OLS vs IV under endogeneity and instrument quality
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=300, max=5000, value=1200, step=100),
+            ui.input_slider("beta", "True structural effect (beta)", min=-1.0, max=3.0, value=1.2, step=0.1),
+            ui.input_slider("rho_xu", "Endogeneity strength (corr X,u)", min=0.0, max=0.95, value=0.6, step=0.05),
+            ui.input_slider("pi", "Instrument relevance (first-stage loading)", min=0.05, max=2.0, value=0.9, step=0.05),
+            ui.input_slider("gamma", "Exclusion violation (direct Z -> Y)", min=0.0, max=1.5, value=0.0, step=0.05),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Tip:** Set exclusion violation to 0 to see valid IV. "
+                "Then increase it to observe IV failure despite strong first stage."
+            ),
+            width=330,
+        ),
+        ui.output_plot("iv_plot"),
+    ),
+)
+
+
+def server(input, output, session):
+    @reactive.calc
+    def make_data():
+        input.resample()
+        n = input.n()
+
+        z = np.random.normal(size=n)
+        v = np.random.normal(size=n)
+        e = np.random.normal(size=n)
+
+        # Build endogenous regressor with corr(X,u) controlled by rho
+        rho = input.rho_xu()
+        u = e
+        x_endog = rho * u + np.sqrt(max(1e-8, 1 - rho**2)) * v
+
+        x = input.pi() * z + x_endog
+        y = input.beta() * x + input.gamma() * z + u
+
+        return z, x, y
+
+    @render.plot
+    def iv_plot():
+        try:
+            z, x, y = make_data()
+
+            n = len(x)
+
+            # OLS
+            X_ols = np.column_stack([np.ones(n), x])
+            b_ols = np.linalg.lstsq(X_ols, y, rcond=None)[0]
+            beta_ols = b_ols[1]
+
+            # Exact 2SLS via projection matrix (single instrument + intercept)
+            Q = np.column_stack([np.ones(n), z])
+            Pq = Q @ np.linalg.inv(Q.T @ Q) @ Q.T
+            X = np.column_stack([np.ones(n), x])
+            b_iv = np.linalg.inv(X.T @ Pq @ X) @ (X.T @ Pq @ y)
+            beta_iv = b_iv[1]
+
+            # First-stage OLS and F-stat for excluded instrument z
+            b_fs = np.linalg.lstsq(Q, x, rcond=None)[0]
+            xhat = Q @ b_fs
+            x_mean = x.mean()
+            sst = np.sum((x - x_mean) ** 2)
+            ssr = np.sum((x - xhat) ** 2)
+            r2 = max(0.0, 1.0 - ssr / max(1e-12, sst))
+            f_stat = (r2 / max(1e-12, 1 - r2)) * (n - 2)
+
+            true_beta = input.beta()
+
+            fig, axes = plt.subplots(1, 2, figsize=(10, 4.4))
+
+            # Panel 1: estimate comparison
+            labels = ["OLS", "IV (2SLS)", "True"]
+            vals = [beta_ols, beta_iv, true_beta]
+            colors = ["#c46a6a", "#5c89b3", "#2d2d2d"]
+            axes[0].bar(labels, vals, color=colors, alpha=0.9)
+            axes[0].axhline(true_beta, color="#2d2d2d", linestyle="--", linewidth=1.2)
+            axes[0].set_ylabel("Coefficient", fontsize=11)
+            axes[0].set_title("OLS vs IV", fontsize=12, fontweight="bold")
+
+            # Panel 2: first-stage scatter
+            axes[1].scatter(z, x, s=10, alpha=0.35, color="#5c89b3", edgecolors="none")
+            z_line = np.linspace(z.min(), z.max(), 100)
+            x_line = b_fs[0] + b_fs[1] * z_line
+            axes[1].plot(z_line, x_line, color="#d94f4f", linewidth=2.0, label="First stage fit")
+            axes[1].set_xlabel("Instrument z", fontsize=11)
+            axes[1].set_ylabel("Endogenous regressor x", fontsize=11)
+            axes[1].set_title("First Stage", fontsize=12, fontweight="bold")
+            axes[1].legend(fontsize=8.5)
+
+            txt = (
+                "beta_true = {:.3f}\n"
+                "beta_ols  = {:.3f}\n"
+                "beta_iv   = {:.3f}\n"
+                "F_first   = {:.2f}"
+            ).format(true_beta, beta_ols, beta_iv, f_stat)
+
+            axes[0].text(
+                0.03,
+                0.97,
+                txt,
+                transform=axes[0].transAxes,
+                va="top",
+                fontsize=8.5,
+                fontfamily="monospace",
+                bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#cccccc", alpha=0.95),
+            )
+
+            plt.tight_layout()
+            return fig
+        except Exception as err:
+            fig, ax = plt.subplots(figsize=(8, 3))
+            ax.axis("off")
+            ax.text(0.02, 0.75, "Simulation error", fontsize=12, fontweight="bold")
+            ax.text(0.02, 0.50, str(err), fontsize=10)
+            ax.text(0.02, 0.25, "Click Resample after adjusting parameters.", fontsize=10)
+            return fig
+
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-iv-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| Theorem 3.1 (just-identified IV) | Relevance + exclusion | Structural effect identified by covariance ratio |
+| 2SLS representation | Linear projection with instruments | Uses only instrument-induced variation in endogenous regressor |
+| Theorem 3.2 (consistency) | Valid moments + non-weak relevance in population | IV/2SLS converges to true parameter |
+| Weak-IV caution | Low first-stage relevance | Finite-sample bias and unstable inference can be severe |
+
+IV is powerful because it turns a broken exogeneity environment into a credible design—if and only if the exclusion story is believable and first-stage strength is adequate.

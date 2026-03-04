@@ -1,0 +1,89 @@
+---
+title: "Lemma"
+subtitle: "An Open-Source Econometrics Learning Site"
+toc: false
+number-sections: false
+sidebar: false
+---
+
+::: {.lead}
+In mathematics, a *lemma* is a proven intermediate result established before---and in service of---a larger theorem. Every concept here is a building block. Accumulate enough lemmas, and the full architecture of causal inference becomes visible.
+:::
+
+## What This Site Offers
+
+**Narrative-first proofs.** The prose tells a coherent mathematical story. Detailed derivations are collapsed by default; expand them on demand. The page never becomes a wall of equations.
+
+**In-browser interactive code.** Each key result is accompanied by a Python simulation that runs directly in your browser via WebAssembly. No installation required. Adjust parameters, press Run, and watch the theorem come alive.
+
+**Rigorous but accessible.** Lemma targets the gap between formal textbooks (dense, proof-heavy) and applied guides (light on rigor).
+
+---
+
+## Chapters
+
+### Foundations of Causal Thinking
+
+| Chapter | Topic | Key Results |
+|---|---|---|
+| [00 · Selection Bias and CIA](chapters/00-selection-bias-cia.qmd) | Selection problem, potential outcomes, CIA | Identification under conditional independence |
+
+### Estimation and Regression
+
+| Chapter | Topic | Key Results |
+|---|---|---|
+| [01 · OLS Foundations](chapters/01-ols.qmd) | Model setup, normal equations, Gauss-Markov | Unbiasedness, BLUE, variance estimation |
+| [02 · Large-Sample Theory](chapters/02-asymptotics.qmd) | LLN, CLT, consistency, Delta method | Asymptotic normality of OLS |
+| [09 · Maximum Likelihood Estimation](chapters/09-mle.qmd) | Likelihood, score, Hessian | Asymptotic normality and model-based estimation |
+| [10 · Generalized Method of Moments](chapters/10-gmm.qmd) | Moment conditions, weighting | OLS/IV unification and overidentification logic |
+
+### Causal Designs
+
+| Chapter | Topic | Key Results |
+|---|---|---|
+| [06 · Randomized Controlled Trials](chapters/06-rct.qmd) | Random assignment, ITT/TOT, compliance | Experimental identification benchmark |
+| [03 · Instrumental Variables](chapters/03-iv.qmd) | Endogeneity, exclusion restriction, 2SLS | IV consistency, weak instrument bias |
+| [04 · Difference-in-Differences](chapters/04-did.qmd) | Parallel trends, event studies, staggered adoption | ATT identification, modern DiD estimators |
+| [05 · Regression Discontinuity](chapters/05-rdd.qmd) | Sharp/Fuzzy RDD, bandwidth selection | Local treatment effect estimation |
+| [08 · Synthetic Control](chapters/08-synthetic-control.qmd) | Donor pool weighting, placebo checks | Counterfactual construction for aggregate units |
+
+### Advanced Inference and Extensions
+
+| Chapter | Topic | Key Results |
+|---|---|---|
+| [07 · Standard Errors in Practice](chapters/07-standard-errors.qmd) | Robust, cluster, HAC, inference pitfalls | Reliable confidence intervals and hypothesis tests |
+
+### Problem Sets
+
+Practice problems with collapsed solutions and interactive verification. [Browse problem sets →](problem-sets/index.qmd)
+
+---
+
+## How to Read This Site
+
+Each section follows a **four-layer structure**:
+
+1. **Intuition** — Plain prose explaining *why* before *what*
+2. **Formalization** — Definitions, assumptions, theorem statement
+3. **Proof** — Step-by-step derivation (collapsed by default --- click to expand)
+4. **Interactive code** — Runnable Python simulation to confirm the result
+
+You can read at any depth. Skip the proofs entirely, or expand every one. The layers are progressive, not parallel.
+
+---
+
+::: {.callout-tip collapse="true"}
+## Example: Collapsible Proof Block
+
+This is how proof blocks appear throughout the site. Click the header to expand or collapse.
+
+**Step 1.** Start with the OLS estimator $\hat{\beta} = (X'X)^{-1}X'Y$.
+
+**Step 2.** Substitute $Y = X\beta + \varepsilon$ to get $\hat{\beta} = \beta + (X'X)^{-1}X'\varepsilon$.
+
+**Step 3.** Under $\mathbb{E}[\varepsilon \mid X] = 0$, we have $\mathbb{E}[\hat{\beta} \mid X] = \beta$. $\blacksquare$
+:::
+
+---
+
+*Lemma is open source. Content is licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); code is [MIT](https://opensource.org/licenses/MIT). [View on GitHub](https://github.com/xushujie/lemma).*

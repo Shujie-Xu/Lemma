@@ -1,0 +1,322 @@
+---
+title: "Problem Set 01: OLS Foundations"
+description: "Practice problems on selection bias, OLS derivation, unbiasedness, asymptotic normality, and inference."
+---
+
+## Instructions
+
+- Recommended time: 90-150 minutes
+- Difficulty guide: ★ standard · ★★ challenging · ★★★ advanced
+- Try each problem before opening the solution block
+
+This set integrates concepts from [Selection Bias and CIA](../chapters/00-selection-bias-cia.qmd#sec-selection-bias-cia-decomposition), [OLS Foundations](../chapters/01-ols.qmd#sec-ols-estimator), and [Large-Sample Theory](../chapters/02-asymptotics.qmd#sec-asymptotics-clt).
+
+---
+
+## Problem 1 (Selection Bias Decomposition) ★
+
+Let $D \in \{0,1\}$ denote treatment status and $(Y(1),Y(0))$ potential outcomes.
+
+1. Show that
+   $$
+   \mathbb{E}[Y\mid D=1]-\mathbb{E}[Y\mid D=0]
+   = \mathbb{E}[Y(1)-Y(0)\mid D=1] + \left(\mathbb{E}[Y(0)\mid D=1]-\mathbb{E}[Y(0)\mid D=0]\right).
+   $$
+2. Interpret each term in words.
+3. State one empirical context where the selection-bias term is likely positive.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand solution
+
+**(1) Derivation.**
+
+By consistency, $Y=Y(1)$ when $D=1$ and $Y=Y(0)$ when $D=0$:
+
+$$
+\mathbb{E}[Y\mid D=1]-\mathbb{E}[Y\mid D=0]
+=\mathbb{E}[Y(1)\mid D=1]-\mathbb{E}[Y(0)\mid D=0].
+$$
+
+Add and subtract $\mathbb{E}[Y(0)\mid D=1]$:
+
+$$
+=\underbrace{\left(\mathbb{E}[Y(1)\mid D=1]-\mathbb{E}[Y(0)\mid D=1]\right)}_{\text{ATT}}
++\underbrace{\left(\mathbb{E}[Y(0)\mid D=1]-\mathbb{E}[Y(0)\mid D=0]\right)}_{\text{selection bias}}.
+$$
+
+**(2) Interpretation.**
+
+- First term: average causal effect for treated units (ATT).
+- Second term: baseline untreated-outcome difference between treated and untreated groups.
+
+**(3) Example with likely positive selection bias.**
+
+Job training programs where highly motivated workers self-select into treatment. Even without treatment, their wages may have been higher on average.
+
+$\blacksquare$
+:::
+
+---
+
+## Problem 2 (Deriving OLS) ★★
+
+Consider $Y = X\beta + \varepsilon$ with full column rank in $X$.
+
+1. Show that minimizing
+   $$
+   S(b)=(Y-Xb)'(Y-Xb)
+   $$
+   yields the normal equations.
+2. Solve for $\hat\beta$.
+3. Explain in one sentence what geometric object $X\hat\beta$ is.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand solution
+
+Expand the objective:
+
+$$
+S(b)=Y'Y-2b'X'Y+b'X'Xb.
+$$
+
+Differentiate and set to zero:
+
+$$
+\frac{\partial S(b)}{\partial b}=-2X'Y+2X'Xb=0
+\quad \Rightarrow \quad X'X\hat\beta=X'Y.
+$$
+
+If $X'X$ is invertible,
+
+$$
+\hat\beta=(X'X)^{-1}X'Y.
+$$
+
+Geometric interpretation: $X\hat\beta$ is the orthogonal projection of $Y$ onto the column space of $X$.
+
+$\blacksquare$
+:::
+
+---
+
+## Problem 3 (Unbiasedness and Failure Modes) ★★
+
+Assume $\hat\beta=(X'X)^{-1}X'Y$.
+
+1. Show that under $\mathbb{E}[\varepsilon\mid X]=0$, OLS is conditionally unbiased.
+2. Suppose instead $\mathbb{E}[\varepsilon\mid X]=X\gamma$ for some nonzero $\gamma$. Derive the resulting conditional bias.
+3. Give one applied reason this failure can happen.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand solution
+
+From $Y=X\beta+\varepsilon$:
+
+$$
+\hat\beta=\beta+(X'X)^{-1}X'\varepsilon.
+$$
+
+So
+
+$$
+\mathbb{E}[\hat\beta\mid X]=\beta+(X'X)^{-1}X'\mathbb{E}[\varepsilon\mid X].
+$$
+
+If $\mathbb{E}[\varepsilon\mid X]=0$, then $\mathbb{E}[\hat\beta\mid X]=\beta$.
+
+If $\mathbb{E}[\varepsilon\mid X]=X\gamma$:
+
+$$
+\mathbb{E}[\hat\beta\mid X]-\beta=(X'X)^{-1}X'X\gamma=\gamma.
+$$
+
+Hence bias is exactly $\gamma$.
+
+Applied reason: omitted variable bias (unobserved ability correlated with schooling in a wage regression).
+
+$\blacksquare$
+:::
+
+---
+
+## Problem 4 (Asymptotic Normality Sketch) ★★★
+
+Show the key decomposition behind OLS asymptotic normality:
+
+$$
+\sqrt{n}(\hat\beta-\beta)=\left(\frac{X'X}{n}\right)^{-1}\left(\frac{1}{\sqrt{n}}\sum_{i=1}^n X_i\varepsilon_i\right).
+$$
+
+Then explain which limit theorem applies to each factor and state the asymptotic variance matrix.
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand solution
+
+Start from
+
+$$
+\hat\beta-\beta=(X'X)^{-1}X'\varepsilon.
+$$
+
+Multiply by $\sqrt{n}$ and rearrange:
+
+$$
+\sqrt{n}(\hat\beta-\beta)=\left(\frac{X'X}{n}\right)^{-1}\left(\frac{1}{\sqrt{n}}X'\varepsilon\right)
+=\left(\frac{X'X}{n}\right)^{-1}\left(\frac{1}{\sqrt{n}}\sum_{i=1}^n X_i\varepsilon_i\right).
+$$
+
+Limits:
+
+- LLN: $X'X/n \xrightarrow{p} Q_{xx}=\mathbb{E}[X_iX_i']$.
+- Multivariate CLT: $n^{-1/2}\sum_i X_i\varepsilon_i \xrightarrow{d} \mathcal{N}(0,\Omega)$ where $\Omega=\mathbb{E}[X_iX_i'\varepsilon_i^2]$.
+
+By Slutsky:
+
+$$
+\sqrt{n}(\hat\beta-\beta) \xrightarrow{d} \mathcal{N}(0, Q_{xx}^{-1}\Omega Q_{xx}^{-1}).
+$$
+
+$\blacksquare$
+:::
+
+---
+
+## Problem 5 (Inference Choice) ★★
+
+You estimate a panel-like policy regression with repeated observations inside regions over time.
+
+1. Why can homoskedastic OLS standard errors be misleading here?
+2. Why may HC robust errors still be insufficient?
+3. Which standard-error strategy is typically the baseline, and why?
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand solution
+
+1. Homoskedastic OLS errors assume constant variance and no within-group dependence. Policy data often violate both.
+2. HC robust errors allow heteroskedasticity but still assume independent observations. Region-level serial correlation breaks this.
+3. Cluster-robust errors (clustered at the policy-assignment level, often region) are the baseline because they allow arbitrary correlation within clusters and independence across clusters.
+
+For extensions (few clusters, HAC, multi-way clustering), see [Standard Errors in Practice](../chapters/07-standard-errors.qmd).
+
+$\blacksquare$
+:::
+
+---
+
+## Computational Verification (Optional)
+
+Use the app to test how omitted-variable selection changes the bias of naive and adjusted estimators.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 560
+#| echo: false
+
+# Simulation: problem-set verification for selection bias and adjustment
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=300, max=4000, value=1200, step=100),
+            ui.input_slider("tau", "True treatment effect", min=-1.0, max=3.0, value=1.2, step=0.1),
+            ui.input_slider("sel_u", "Selection on unobserved U", min=0.0, max=2.0, value=1.0, step=0.1),
+            ui.input_slider("reps", "Monte Carlo replications", min=50, max=1200, value=300, step=50),
+            ui.input_action_button("run", "Run simulation", class_="btn-primary w-100 mt-2"),
+            width=300,
+        ),
+        ui.output_plot("pset_plot"),
+    ),
+)
+
+
+def server(input, output, session):
+    @reactive.calc
+    def simulate():
+        input.run()
+        n = input.n()
+        tau = input.tau()
+        sel_u = input.sel_u()
+        reps = input.reps()
+
+        naive_est = []
+        adj_est = []
+
+        for _ in range(reps):
+            x = np.random.normal(size=n)
+            u = np.random.normal(size=n)
+            e = np.random.normal(size=n)
+
+            d_score = 0.9 * x + sel_u * u + np.random.normal(size=n)
+            d = (d_score > 0).astype(float)
+
+            y0 = 1.0 + 1.1 * x + 1.0 * u + e
+            y = y0 + tau * d
+
+            naive = y[d == 1].mean() - y[d == 0].mean()
+            X = np.column_stack([np.ones(n), d, x])
+            b = np.linalg.lstsq(X, y, rcond=None)[0]
+            adj = b[1]
+
+            naive_est.append(naive)
+            adj_est.append(adj)
+
+        return np.array(naive_est), np.array(adj_est), tau
+
+    @render.plot
+    def pset_plot():
+        naive, adj, tau = simulate()
+
+        fig, axes = plt.subplots(1, 2, figsize=(9.8, 4.2))
+
+        bins = 30
+        axes[0].hist(naive, bins=bins, alpha=0.55, density=True, label="Naive", color="#c46a6a")
+        axes[0].hist(adj, bins=bins, alpha=0.55, density=True, label="OLS + X", color="#5c89b3")
+        axes[0].axvline(tau, color="#2d2d2d", linestyle="--", linewidth=1.4, label="True")
+        axes[0].set_title("Estimator distributions", fontsize=12, fontweight="bold")
+        axes[0].set_xlabel("Estimated effect")
+        axes[0].set_ylabel("Density")
+        axes[0].legend(fontsize=8.5)
+
+        means = [naive.mean(), adj.mean(), tau]
+        labels = ["Naive mean", "OLS+X mean", "True"]
+        colors = ["#c46a6a", "#5c89b3", "#2d2d2d"]
+        axes[1].bar(labels, means, color=colors)
+        axes[1].set_title("Average estimate vs truth", fontsize=12, fontweight="bold")
+        axes[1].set_ylabel("Effect")
+
+        txt = (
+            "Bias(naive) = {:.3f}\n"
+            "Bias(OLS+X) = {:.3f}"
+        ).format(naive.mean() - tau, adj.mean() - tau)
+        axes[1].text(
+            0.03,
+            0.97,
+            txt,
+            transform=axes[1].transAxes,
+            va="top",
+            fontsize=9,
+            fontfamily="monospace",
+            bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#cccccc", alpha=0.95),
+        )
+
+        plt.tight_layout()
+        return fig
+
+
+app = App(app_ui, server)
+```
+
+---
+
+## Reflection Prompt
+
+In 3-5 sentences, explain the difference between:
+
+- an estimator that is unbiased under strict assumptions, and
+- an estimator that is robust to realistic violations.
+
+State one empirical situation where you would prioritize robustness over finite-sample elegance.

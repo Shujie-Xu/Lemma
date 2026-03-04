@@ -1,0 +1,368 @@
+---
+title: "Difference-in-Differences"
+description: "Parallel trends, event study design, heterogeneous treatment effects, and staggered adoption."
+---
+
+## Motivation {#sec-did-motivation}
+
+Difference-in-Differences (DiD) is a design for settings where treated and untreated units both evolve over time, but treatment starts for one group at a known moment. The design logic is simple: compare how outcomes change over time in the treated group to how outcomes change over time in a comparison group.
+
+That "difference of differences" removes fixed group gaps and common time shocks, making DiD one of the most practical identification strategies in applied microeconometrics. The hard part is not algebra; the hard part is defending the comparison group's counterfactual trend for the treated group.
+
+If you need the potential-outcomes setup behind this chapter, review [Selection Bias and CIA](00-selection-bias-cia.qmd). For randomized benchmark intuition, compare with [Randomized Controlled Trials](06-rct.qmd). For local-policy alternatives when timing assumptions are weak, see [Regression Discontinuity](05-rdd.qmd) and [Synthetic Control](08-synthetic-control.qmd).
+
+### What You Will Learn
+
+- The canonical 2x2 DiD estimand and its identifying assumptions
+- Why parallel trends is the central identifying restriction
+- How event studies diagnose dynamic effects and pre-trend concerns
+- Why staggered adoption with heterogeneity can break naive TWFE interpretation
+- How modern group-time ATT estimators recover interpretable effects
+
+---
+
+## Setup, Potential Outcomes, and Assumptions {#sec-did-setup}
+
+Let $G_i \in \{0,1\}$ indicate whether unit $i$ belongs to the treated group, and let $T_t \in \{0,1\}$ indicate post-treatment periods. For now, focus on the canonical two-period setting ($t=0$ pre, $t=1$ post), where treatment turns on for $G_i=1$ units only in period 1.
+
+Observed outcomes satisfy
+
+$$
+Y_{it} = Y_{it}(0) + D_{it}\big(Y_{it}(1)-Y_{it}(0)\big), \tag{4.1}
+$$
+
+with treatment indicator $D_{it} = G_i \cdot T_t$. The target is the post-period average treatment effect on treated units:
+
+$$
+ATT = \mathbb{E}\big[Y_{i1}(1)-Y_{i1}(0)\mid G_i=1\big]. \tag{4.2}
+$$
+
+### Assumptions {#sec-did-assumptions}
+
+| ID | Name | Statement | Role in Proof |
+|---|---|---|---|
+| DID.1 | Stable composition | Group membership is well-defined and comparable over time | Prevents composition shifts from masquerading as treatment effects |
+| DID.2 | No anticipation | For treated units, potential outcomes at $t=0$ are unaffected by future treatment | Lets pre-period outcomes represent untreated behavior |
+| DID.3 | Parallel trends (untreated potential outcomes) | $\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=1]=\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=0]$ | Identifies missing counterfactual trend for treated group |
+| DID.4 | SUTVA/no spillovers across groups | One unit's treatment does not change another unit's potential outcomes | Ensures control trend is a valid benchmark |
+
+The core tension is DID.3. It is never guaranteed by design in observational settings, so DiD is strongest when institutional context makes common trend evolution plausible.
+
+---
+
+## Canonical 2x2 DiD Estimator {#sec-did-2x2}
+
+Define group-time means $\bar Y_{gt}=\mathbb{E}[Y_{it}\mid G_i=g, t]$. The population DiD contrast is
+
+$$
+\delta_{DID}=\big(\bar Y_{11}-\bar Y_{10}\big)-\big(\bar Y_{01}-\bar Y_{00}\big). \tag{4.3}
+$$
+
+::: {.callout-note}
+## Theorem 4.1 (2x2 DiD Identifies ATT under Parallel Trends)
+
+Under DID.1-DID.4,
+
+$$
+\delta_{DID}=ATT. \tag{4.4}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 4.1
+
+**Step 1 (decompose treated-group change; uses DID.2).**
+
+For treated units (using DID.2 so pre-period outcomes are untreated potential outcomes):
+
+$$
+\mathbb{E}[Y_{i1}-Y_{i0}\mid G_i=1]
+=
+\mathbb{E}[Y_{i1}(1)-Y_{i0}(0)\mid G_i=1].
+$$
+
+Add and subtract $Y_{i1}(0)$:
+
+$$
+=
+\mathbb{E}[Y_{i1}(1)-Y_{i1}(0)\mid G_i=1]
++
+\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=1]. \tag{4.5}
+$$
+
+The first term is $ATT$.
+
+**Step 2 (control-group change; uses untreated controls and DID.4).**
+
+Controls are untreated in both periods, so:
+
+$$
+\mathbb{E}[Y_{i1}-Y_{i0}\mid G_i=0]
+=
+\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=0]. \tag{4.6}
+$$
+
+**Step 3 (difference out untreated trend; uses DID.3).**
+
+Subtract (4.6) from (4.5):
+
+$$
+\delta_{DID}
+=
+ATT
++
+\Big(\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=1]-\mathbb{E}[Y_{i1}(0)-Y_{i0}(0)\mid G_i=0]\Big).
+$$
+
+By DID.3 (parallel trends), the bracketed term is zero, so $\delta_{DID}=ATT$. $\blacksquare$
+:::
+
+The proof highlights the only genuinely unobserved object: the treated group's untreated post-period trend.
+
+---
+
+## Regression Form and Event Study Logic {#sec-did-regression-event-study}
+
+The 2x2 setup is the cleanest place to see identification. Empirical work usually extends this logic to many periods and cohorts, where the key identifying question stays the same: would treated units have followed the same untreated trend as comparison units in the absence of treatment?
+
+The canonical DiD regression in repeated cross-sections or short panels is
+
+$$
+Y_{it}=\alpha+\lambda G_i+\tau T_t+\beta(G_i\times T_t)+u_{it}, \tag{4.7}
+$$
+
+where $\beta$ is the DiD estimand in the 2x2 design, and under DID.1-DID.4 it equals $ATT$. With panel data, it is common to write a two-way fixed-effects (TWFE) model:
+
+$$
+Y_{it}=\alpha_i+\gamma_t+\beta D_{it}+u_{it}. \tag{4.8}
+$$
+
+In the strict 2x2 case, (4.8) matches (4.3). In staggered adoption, however, TWFE can mix many implicit comparisons, including already-treated groups acting as controls for newly treated groups. For inference, cluster standard errors at the treatment-assignment variation level (for example, state or policy-unit level when treatment varies at that level).
+
+### Event Study Specification {#sec-did-event-study}
+
+To visualize dynamic effects and inspect pre-trends, use relative-time indicators:
+
+$$
+Y_{it}=\alpha_i+\gamma_t+\sum_{k\neq -1}\theta_k\,1\{t-T_i^*=k\}+u_{it}, \tag{4.9}
+$$
+
+where $T_i^*$ is unit $i$'s treatment start time for ever-treated units and period $k=-1$ is omitted as baseline. Never-treated units are included via fixed effects and as comparison observations, but they do not carry event-time indicators.
+
+Interpretation guide:
+
+1. **Pre-period coefficients** ($k<0$) near zero support (but do not prove) parallel trends.
+2. **Post-period coefficients** ($k\ge 0$) trace treatment dynamics.
+3. Strong pre-trend drift suggests design fragility; revisit comparison group choice or switch design.
+
+::: {.callout-warning}
+## Pre-trend tests are diagnostics, not identification proofs
+
+A statistically flat pre-trend does not prove parallel trends; it may reflect low power. Conversely, noisy pre-trend deviations do not always invalidate identification if institutional timing and covariate-adjusted trends support the design.
+
+Use design knowledge first, event-study plots second.
+:::
+
+---
+
+## Staggered Adoption and Heterogeneous Effects {#sec-did-staggered-heterogeneity}
+
+Modern applications often have staggered rollout: different groups are treated at different dates. If treatment effects vary across groups or over exposure duration, naive TWFE with one treatment indicator can be hard to interpret.
+
+Key issue: TWFE may place implicit negative or non-transparent weights on some group-time effects. This is why recent practice emphasizes group-time average treatment effects. Let $A_i$ denote unit $i$'s first-treated period, with $A_i=\infty$ for never-treated units:
+
+$$
+ATT(a,t)=\mathbb{E}[Y_{it}(1)-Y_{it}(0)\mid A_i=a],\qquad t\ge a. \tag{4.10}
+$$
+
+Then aggregate with explicit weights tied to your target population and policy question.
+
+Practical workflow for staggered settings:
+
+1. Estimate $ATT(a,t)$ using not-yet-treated or never-treated comparison sets.
+2. Aggregate transparently (e.g., cohort-weighted ATT, calendar-time ATT).
+3. Report event-time dynamics with confidence bands.
+4. Cross-check inference choices in [Standard Errors in Practice](07-standard-errors.qmd), especially clustering by treatment assignment level.
+
+For matrix-estimation intuition of weighted moments, connect this section to [Generalized Method of Moments](10-gmm.qmd). For a design alternative that directly constructs synthetic counterfactual paths, compare with [Synthetic Control](08-synthetic-control.qmd).
+
+---
+
+## Design Checklist for Applied DiD {#sec-did-checklist}
+
+Before interpreting a DiD coefficient causally, ask:
+
+1. **Policy timing:** Is treatment timing plausibly exogenous to short-run shocks in outcomes?
+2. **Comparison group quality:** Why should controls capture untreated trend for treated units?
+3. **Anticipation:** Could units change behavior before official treatment date?
+4. **Spillovers:** Can treatment of one unit affect outcomes of comparison units?
+5. **Inference level:** Are standard errors clustered at the correct treatment-variation level?
+
+If this checklist fails, reconsider design assumptions or use alternatives like [Instrumental Variables](03-iv.qmd) or [Regression Discontinuity](05-rdd.qmd), depending on institutional context.
+
+---
+
+## Interactive Simulation {#sec-did-simulation}
+
+The simulation below generates a simple two-group panel, then compares true ATT with DiD under controllable parallel-trend violations and treatment-effect heterogeneity.
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 580
+#| echo: false
+
+# Simulation: DiD bias under parallel-trend violations and heterogeneity
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n_per_group", "Units per group", min=100, max=3000, value=800, step=100),
+            ui.input_slider("periods", "Pre and post periods", min=2, max=8, value=4, step=1),
+            ui.input_slider("tau", "Average treatment effect", min=-2.0, max=4.0, value=1.2, step=0.1),
+            ui.input_slider("hetero", "Treatment heterogeneity (standard deviation)", min=0.0, max=2.0, value=0.5, step=0.1),
+            ui.input_slider("trend_gap", "Parallel-trend violation (treated slope gap)", min=-1.0, max=1.0, value=0.0, step=0.05),
+            ui.input_slider("noise", "Outcome noise (standard deviation)", min=0.1, max=4.0, value=1.0, step=0.1),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Interpretation:** Keep trend gap at 0 for valid DiD. "
+                "Move it away from 0 to see how bias emerges even with many observations."
+            ),
+            width=350,
+        ),
+        ui.output_plot("did_plot"),
+    ),
+)
+
+
+def server(input, output, session):
+    @reactive.calc
+    def simulate_panel():
+        input.resample()
+        np.random.seed(None)
+
+        n = input.n_per_group()
+        t_count = input.periods()
+        tau = input.tau()
+        hetero_sd = input.hetero()
+        slope_gap = input.trend_gap()
+        noise_sd = input.noise()
+
+        total_units = 2 * n
+        unit_group = np.concatenate([np.zeros(n, dtype=int), np.ones(n, dtype=int)])
+        unit_fe = np.random.normal(loc=0.0, scale=1.0, size=total_units)
+        unit_tau = tau + np.random.normal(loc=0.0, scale=hetero_sd, size=total_units)
+
+        post_start = t_count // 2
+        time_index = np.arange(t_count)
+        common_time = 0.5 * time_index
+
+        y = np.zeros((total_units, t_count))
+        for t in range(t_count):
+            post = 1 if t >= post_start else 0
+            treated_trend = slope_gap * t
+            eps_t = np.random.normal(loc=0.0, scale=noise_sd, size=total_units)
+
+            untreated = unit_fe + common_time[t] + treated_trend * unit_group + eps_t
+            treat_effect = unit_tau * post * unit_group
+
+            y[:, t] = untreated + treat_effect
+        pre_mask = time_index < post_start
+        post_mask = time_index >= post_start
+
+        y_treat_pre = y[unit_group == 1][:, pre_mask].mean()
+        y_treat_post = y[unit_group == 1][:, post_mask].mean()
+        y_ctrl_pre = y[unit_group == 0][:, pre_mask].mean()
+        y_ctrl_post = y[unit_group == 0][:, post_mask].mean()
+
+        did_est = (y_treat_post - y_treat_pre) - (y_ctrl_post - y_ctrl_pre)
+        true_att = unit_tau[unit_group == 1].mean()
+        bias = did_est - true_att
+
+        treat_series = y[unit_group == 1].mean(axis=0)
+        ctrl_series = y[unit_group == 0].mean(axis=0)
+
+        return {
+            "time_index": time_index,
+            "post_start": post_start,
+            "treat_series": treat_series,
+            "ctrl_series": ctrl_series,
+            "did_est": did_est,
+            "true_att": true_att,
+            "bias": bias,
+            "trend_gap": slope_gap,
+        }
+
+    @render.plot
+    def did_plot():
+        try:
+            out = simulate_panel()
+
+            fig, axes = plt.subplots(1, 2, figsize=(11, 4.6))
+
+            t = out["time_index"]
+            axes[0].plot(t, out["ctrl_series"], marker="o", linewidth=2.0, color="#4e79a7", label="Control group")
+            axes[0].plot(t, out["treat_series"], marker="o", linewidth=2.0, color="#e15759", label="Treated group")
+            axes[0].axvline(out["post_start"] - 0.5, color="#333333", linestyle="--", linewidth=1.2)
+            axes[0].set_title("Average outcomes over time", fontsize=12, fontweight="bold")
+            axes[0].set_xlabel("Time period", fontsize=11)
+            axes[0].set_ylabel("Mean outcome", fontsize=11)
+            axes[0].legend(fontsize=8.8)
+
+            labels = ["True ATT", "DiD estimate", "Bias"]
+            values = [out["true_att"], out["did_est"], out["bias"]]
+            colors = ["#59a14f", "#4e79a7", "#f28e2b"]
+            axes[1].bar(labels, values, color=colors, alpha=0.9)
+            axes[1].axhline(0.0, color="#333333", linewidth=1.0)
+            axes[1].set_title("Estimand vs estimate", fontsize=12, fontweight="bold")
+            axes[1].set_ylabel("Value", fontsize=11)
+
+            stats_text = (
+                "true_att = {:.3f}\n"
+                "did_est  = {:.3f}\n"
+                "bias     = {:.3f}\n"
+                "trend_gap= {:.3f}"
+            ).format(out["true_att"], out["did_est"], out["bias"], out["trend_gap"])
+
+            axes[1].text(
+                0.03,
+                0.97,
+                stats_text,
+                transform=axes[1].transAxes,
+                va="top",
+                fontsize=8.5,
+                fontfamily="monospace",
+                bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#cccccc", alpha=0.95),
+            )
+
+            plt.tight_layout()
+            return fig
+        except Exception as err:
+            fig, ax = plt.subplots(figsize=(8, 3))
+            ax.axis("off")
+            ax.text(0.02, 0.75, "Simulation error", fontsize=12, fontweight="bold")
+            ax.text(0.02, 0.50, str(err), fontsize=10)
+            ax.text(0.02, 0.25, "Click Resample after adjusting parameters.", fontsize=10)
+            return fig
+
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-did-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| Theorem 4.1 (2x2 DiD identification) | DID.1-DID.4, especially parallel trends | Difference of differences identifies ATT |
+| Regression form (2x2/TWFE) | Correct design mapping and valid comparison groups | Interaction coefficient equals DiD in canonical 2x2 |
+| Event-study diagnostics | Stable composition + meaningful relative-time coding | Pre-period dynamics can reveal design fragility |
+| Staggered adoption caution | Heterogeneous effects across cohorts/time | Naive TWFE may not equal policy-relevant average effect |
+| Group-time ATT workflow | Valid not-yet-treated/never-treated counterfactual trends | Transparent aggregation restores interpretable causal effects |
+
+DiD is powerful because it converts time and group structure into a causal design, but its credibility lives or dies with counterfactual trend logic rather than regression syntax.

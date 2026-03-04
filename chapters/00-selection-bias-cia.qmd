@@ -1,0 +1,334 @@
+---
+title: "Selection Bias and CIA"
+description: "Selection problem, potential outcomes, and the conditional independence assumption."
+---
+
+## Motivation {#sec-selection-bias-cia-motivation}
+
+Empirical economics is rarely blocked by a lack of data. It is blocked by a lack of credible counterfactuals. You can usually observe what happened after treatment, but you cannot directly observe what would have happened to the same unit without treatment.
+
+This missing counterfactual creates the central selection problem. Units who receive treatment are often different before treatment begins: they may have different ability, incentives, baseline risk, or policy exposure. If we ignore those differences, a simple treated-versus-untreated comparison mixes causal effect with pre-existing imbalance.
+
+This chapter formalizes that problem with potential outcomes notation and introduces the conditional independence assumption (CIA). CIA is the bridge from "we only observe one outcome per unit" to "we can still identify causal effects under clear conditions." When CIA is implausible, we move to design-based strategies such as [Randomized Controlled Trials](06-rct.qmd), [Instrumental Variables](03-iv.qmd), or [Regression Discontinuity](05-rdd.qmd).
+
+---
+
+## Potential Outcomes and the Fundamental Problem {#sec-selection-bias-cia-po}
+
+For each unit $i$, define two potential outcomes:
+
+- $Y_i(1)$: outcome if treated
+- $Y_i(0)$: outcome if untreated
+
+Let $D_i \in \{0,1\}$ denote treatment status. The observed outcome is
+
+$$
+Y_i = D_i Y_i(1) + (1-D_i)Y_i(0). \tag{0.1}
+$$
+
+::: {.callout-note}
+## Assumption 0.A (Consistency / SUTVA)
+
+If $D_i=d$, then the observed outcome equals the corresponding potential outcome: $Y_i = Y_i(d)$.
+We also assume no interference: one unit's treatment does not change another unit's potential outcomes.
+:::
+
+The individual treatment effect is
+
+$$
+\tau_i = Y_i(1) - Y_i(0), \tag{0.2}
+$$
+
+but $\tau_i$ is never fully observed because we see only one of $Y_i(1), Y_i(0)$ for each unit. This is the fundamental problem of causal inference.
+
+Common targets are
+
+$$
+\text{ATE} = \mathbb{E}[Y(1)-Y(0)], \qquad
+\text{ATT} = \mathbb{E}[Y(1)-Y(0)\mid D=1]. \tag{0.3}
+$$
+
+::: {.callout-note}
+## Why This Matters for Regression
+
+Many regressions are interpreted causally by default, but a regression coefficient is causal only under additional identification assumptions. We build those assumptions here; estimation machinery comes later in [OLS Foundations](01-ols.qmd) and [Large-Sample Theory](02-asymptotics.qmd).
+:::
+
+---
+
+## The Selection Bias Decomposition {#sec-selection-bias-cia-decomposition}
+
+A natural but risky estimator is the difference in observed means:
+
+$$
+\Delta_{\text{naive}} = \mathbb{E}[Y\mid D=1] - \mathbb{E}[Y\mid D=0]. \tag{0.4}
+$$
+
+::: {.callout-note}
+## Theorem 0.1 (Observed Difference = ATT + Selection Bias)
+
+$$
+\mathbb{E}[Y\mid D=1] - \mathbb{E}[Y\mid D=0]
+= \underbrace{\mathbb{E}[Y(1)-Y(0)\mid D=1]}_{\text{ATT}}
++ \underbrace{\left(\mathbb{E}[Y(0)\mid D=1]-\mathbb{E}[Y(0)\mid D=0]\right)}_{\text{Selection bias}}. \tag{0.5}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 0.1
+
+**Step 1.** Use consistency of observed outcomes:
+
+$$
+\mathbb{E}[Y\mid D=1] = \mathbb{E}[Y(1)\mid D=1],
+\qquad
+\mathbb{E}[Y\mid D=0] = \mathbb{E}[Y(0)\mid D=0].
+$$
+
+**Step 2.** Add and subtract $\mathbb{E}[Y(0)\mid D=1]$:
+
+$$
+\mathbb{E}[Y(1)\mid D=1]-\mathbb{E}[Y(0)\mid D=0]
+$$
+
+$$
+= \left(\mathbb{E}[Y(1)\mid D=1]-\mathbb{E}[Y(0)\mid D=1]\right)
++ \left(\mathbb{E}[Y(0)\mid D=1]-\mathbb{E}[Y(0)\mid D=0]\right).
+$$
+
+**Step 3.** Recognize terms as ATT plus selection bias. $\blacksquare$
+:::
+
+The second term in (0.5) is zero only when treated and untreated units would have had the same untreated outcomes in expectation. That equality is exactly what treatment assignment mechanisms usually violate in observational data.
+
+---
+
+## Conditional Independence Assumption (CIA) {#sec-selection-bias-cia-assumption}
+
+Let $X$ be a vector of observed pre-treatment covariates. The CIA is
+
+$$
+\{Y(1), Y(0)\} \perp D \mid X. \tag{0.6}
+$$
+
+Interpretation: once we condition on $X$, treatment is as good as random. Any remaining outcome differences between treated and untreated units with the same $X$ are attributed to treatment, not selection.
+
+Here $X$ must be measured pre-treatment (or otherwise unaffected by treatment assignment). CIA is also called *unconfoundedness*.
+
+CIA is not a theorem; it is a design claim. It is strongest when assignment rules are well understood and rich pre-treatment covariates are available.
+
+A companion condition is overlap (positivity):
+
+$$
+0 < \mathbb{P}(D=1\mid X=x) < 1 \quad \text{for relevant } x. \tag{0.7}
+$$
+
+Without overlap, some covariate profiles have no valid comparison group.
+
+::: {.callout-warning}
+## Practical Reality Check
+
+CIA can fail because of unobserved confounders. If treatment depends on factors not captured in $X$, conditioning on observed covariates is not enough. In those settings, move to design-based identification (for example, [IV](03-iv.qmd), [DiD](04-did.qmd), or [Synthetic Control](08-synthetic-control.qmd)).
+:::
+
+---
+
+## Identification Under CIA {#sec-selection-bias-cia-identification}
+
+Define the conditional treatment effect
+
+$$
+\tau(x) = \mathbb{E}[Y(1)-Y(0)\mid X=x]. \tag{0.8}
+$$
+
+::: {.callout-note}
+## Theorem 0.2 (CIA Identification Formula)
+
+Under CIA and overlap,
+
+$$
+\tau(x) = \mathbb{E}[Y\mid D=1, X=x] - \mathbb{E}[Y\mid D=0, X=x]. \tag{0.9}
+$$
+
+Therefore
+
+$$
+\text{ATE} = \mathbb{E}_X\left[\mathbb{E}[Y\mid D=1,X]-\mathbb{E}[Y\mid D=0,X]\right]. \tag{0.10}
+$$
+:::
+
+::: {.callout-tip collapse="true"}
+## 📐 Expand proof of Theorem 0.2
+
+**Step 1.** By CIA, conditional on $X=x$:
+
+$$
+\mathbb{E}[Y(1)\mid D=1,X=x] = \mathbb{E}[Y(1)\mid D=0,X=x] = \mathbb{E}[Y(1)\mid X=x],
+$$
+
+and similarly for $Y(0)$.
+
+**Step 2.** By consistency:
+
+$$
+\mathbb{E}[Y\mid D=1,X=x] = \mathbb{E}[Y(1)\mid D=1,X=x] = \mathbb{E}[Y(1)\mid X=x],
+$$
+
+$$
+\mathbb{E}[Y\mid D=0,X=x] = \mathbb{E}[Y(0)\mid D=0,X=x] = \mathbb{E}[Y(0)\mid X=x].
+$$
+
+**Step 3.** Subtract to obtain (0.9):
+
+$$
+\mathbb{E}[Y\mid D=1,X=x] - \mathbb{E}[Y\mid D=0,X=x]
+= \mathbb{E}[Y(1)-Y(0)\mid X=x] = \tau(x).
+$$
+
+**Step 4.** Average over $X$ to obtain (0.10). $\blacksquare$
+:::
+
+This result gives a practical workflow: model conditional means by treatment status, check overlap, then aggregate conditional effects. Later chapters connect this logic to regression adjustment, matching, and weighting estimators.
+
+---
+
+## Interactive Simulation {#sec-selection-bias-cia-simulation}
+
+The app below simulates an observational setting where treatment depends on observed covariates $X$ and an unobserved confounder $U$. It compares three estimators:
+
+- Naive difference in means
+- OLS adjusted for $X$ only
+- Oracle-adjusted OLS using both $X$ and $U$ (for demonstration)
+
+```{shinylive-python}
+#| standalone: true
+#| viewerHeight: 620
+#| echo: false
+
+# Simulation: selection bias, CIA, and adjustment quality
+
+from shiny import App, ui, render, reactive
+import numpy as np
+import matplotlib.pyplot as plt
+
+app_ui = ui.page_fillable(
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_slider("n", "Sample size (n)", min=200, max=5000, value=1200, step=100),
+            ui.input_slider("tau", "True treatment effect (tau)", min=-2.0, max=4.0, value=1.5, step=0.1),
+            ui.input_slider("sel_x", "Selection loading on X", min=0.0, max=2.0, value=0.8, step=0.1),
+            ui.input_slider("sel_u", "Selection loading on unobserved U", min=0.0, max=2.0, value=1.0, step=0.1),
+            ui.input_slider("out_u", "Outcome loading on U", min=0.0, max=2.0, value=1.0, step=0.1),
+            ui.input_action_button("resample", "Resample", class_="btn-primary w-100 mt-2"),
+            ui.hr(),
+            ui.markdown(
+                "**Interpretation:** If selection depends on unobserved U, "
+                "conditioning on X alone may still be biased."
+            ),
+            width=320,
+        ),
+        ui.output_plot("bias_plot"),
+    ),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def make_data():
+        input.resample()
+        n = input.n()
+
+        x = np.random.normal(0, 1, n)
+        u = np.random.normal(0, 1, n)
+        eps = np.random.normal(0, 1, n)
+
+        # Treatment assignment with latent-index rule
+        score = input.sel_x() * x + input.sel_u() * u + np.random.normal(0, 1, n)
+        d = (score > 0).astype(float)
+
+        # Potential outcomes
+        y0 = 1.0 + 1.2 * x + input.out_u() * u + eps
+        y1 = y0 + input.tau()
+        y = d * y1 + (1 - d) * y0
+
+        return x, u, d, y
+
+    @render.plot
+    def bias_plot():
+        x, u, d, y = make_data()
+
+        # True effects (constant effect data-generating process)
+        ate_true = input.tau()
+
+        # 1) Naive difference in means
+        naive = y[d == 1].mean() - y[d == 0].mean()
+
+        # 2) OLS with observed X only
+        X1 = np.column_stack([np.ones_like(x), d, x])
+        b1 = np.linalg.lstsq(X1, y, rcond=None)[0]
+        ols_x = b1[1]
+
+        # 3) Oracle OLS with X and unobserved U
+        X2 = np.column_stack([np.ones_like(x), d, x, u])
+        b2 = np.linalg.lstsq(X2, y, rcond=None)[0]
+        oracle = b2[1]
+
+        labels = ["Naive", "OLS + X", "Oracle + X + U", "True"]
+        vals = [naive, ols_x, oracle, ate_true]
+        colors = ["#b55d5d", "#4a7fb5", "#4f9a68", "#2d2d2d"]
+
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4.3))
+
+        # Panel 1: estimator comparison
+        axes[0].bar(labels, vals, color=colors, alpha=0.9)
+        axes[0].axhline(ate_true, color="#2d2d2d", linestyle="--", linewidth=1.4)
+        axes[0].set_ylabel("Estimated effect", fontsize=11)
+        axes[0].set_title("Treatment Effect Estimates", fontsize=12, fontweight="bold")
+        axes[0].tick_params(axis="x", labelrotation=18)
+
+        # Panel 2: assignment mechanism diagnostics
+        bins = np.linspace(-3, 3, 30)
+        axes[1].hist(x[d == 0], bins=bins, alpha=0.45, density=True, label="X | D=0", color="#7aa6d1")
+        axes[1].hist(x[d == 1], bins=bins, alpha=0.45, density=True, label="X | D=1", color="#d98b8b")
+        axes[1].set_xlabel("Observed covariate X", fontsize=11)
+        axes[1].set_ylabel("Density", fontsize=11)
+        axes[1].set_title("Selection on observables", fontsize=12, fontweight="bold")
+        axes[1].legend(fontsize=8.5)
+
+        # Bias summary box
+        txt = (
+            "True ATE  = {:.3f}\n"
+            "Naive bias = {:.3f}\n"
+            "OLS+X bias = {:.3f}\n"
+            "Oracle bias = {:.3f}"
+        ).format(
+            ate_true,
+            naive - ate_true,
+            ols_x - ate_true,
+            oracle - ate_true,
+        )
+        axes[0].text(
+            0.02, 0.97, txt,
+            transform=axes[0].transAxes,
+            fontsize=8.5,
+            va="top",
+            fontfamily="monospace",
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor="#cccccc", alpha=0.95),
+        )
+
+        plt.tight_layout()
+        return fig
+
+app = App(app_ui, server)
+```
+
+---
+
+## Summary {#sec-selection-bias-cia-summary}
+
+| Result | Required Assumptions | Conclusion |
+|---|---|---|
+| Theorem 0.1 (decomposition) | Consistency of observed outcomes | Observed mean difference equals ATT plus selection bias |
+| CIA definition | Rich pre-treatment covariates | Conditional comparability after controlling for $X$ |
+| Theorem 0.2 (identification) | CIA + overlap | ATE identified from conditional treated-control mean differences |
+
+The chapter's main message is simple: causal inference is an identification problem before it is an estimation problem. If assignment is non-random, the naive contrast is generally biased. CIA gives a route to identification when selection is fully captured by observables. When that is not believable, move to stronger designs such as [RCT](06-rct.qmd), [IV](03-iv.qmd), [DiD](04-did.qmd), or [RDD](05-rdd.qmd).
