@@ -79,7 +79,34 @@ where $s_T^2$ and $s_C^2$ are the sample variances in the treatment and control 
 
 ## Experimental Design {#sec-rct-design}
 
-Knowing that randomization identifies the ATE is not enough. *How* you randomize---at what level, with what structure---determines precision, validity, and the estimand itself.
+Knowing that randomization identifies the ATE is not enough. *How* you randomize---at what level, with what structure---determines precision, validity, and the estimand itself. The decision tree below summarizes the main choices:
+
+```
+Can units be independently randomized?
+│
+├─ NO (treatment is group-level or spillovers within groups)
+│  → Cluster Randomization
+│
+└─ YES
+   │
+   ├─ Large sample (N > several hundred)?
+   │  → Simple Randomization
+   │    (LLN ensures approximate balance)
+   │
+   └─ Small sample (random imbalance is a concern)
+      │
+      ├─ Key discrete covariates to balance?
+      │  → Stratified Randomization
+      │    (block on covariates, randomize within strata)
+      │
+      └─ Key continuous covariates, or need maximum precision?
+         → Pairwise Matching
+           (pair similar units, randomize one to treatment)
+
+Ethical / operational constraint — cannot permanently deny treatment?
+→ Phase-In (Stepped Wedge) Design
+  (all units eventually treated; randomize the timing)
+```
 
 ### Unit of Randomization {#sec-rct-unit}
 
