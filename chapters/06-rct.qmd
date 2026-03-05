@@ -240,38 +240,83 @@ The randomized encouragement $Z_i$ satisfies the instrument conditions by constr
 
 ## Power Analysis {#sec-rct-power}
 
-An underpowered trial is wasteful: it cannot detect a real effect even if one exists. Power analysis determines the sample size needed to detect a meaningful effect at a given significance level.
+An underpowered trial is wasteful: it cannot detect a real effect even if one exists. Power calculation determines, *before* the experiment begins, how many observations you need to detect the treatment effect with sufficiently high probability. It is arguably the most important step of experimental design, and a required component of grant applications and IRB submissions.
 
-### Core Formula {#sec-rct-power-formula}
+### $p$-value, Significance, and Power {#sec-rct-power-concepts}
 
-**Power** is the probability of rejecting $H_0: \tau = 0$ when the true effect is $\tau = \delta$:
-
-$$
-\text{Power} = 1 - \beta = \mathbb{P}\left(\text{reject } H_0 \mid \tau = \delta\right). \tag{6.6}
-$$
-
-For individual-level randomization with equal allocation ($n_T = n_C = N/2$), a continuous outcome, and two-sided test at level $\alpha$:
+Under $H_0: \tau = 0$, the test statistic for the difference in means is
 
 $$
-N = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot 4\sigma^2}{\delta^2}, \tag{6.7}
+T = \frac{\hat{\tau}}{\text{SE}(\hat{\tau})} \;\overset{H_0}{\sim}\; \mathcal{N}(0,1). \tag{6.6}
 $$
 
-where $z_q$ is the $q$-th quantile of the standard normal. At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$, giving $N \approx 16\sigma^2/\delta^2$ per group. A standardized effect of $0.2$ requires roughly $400$ per group; an effect of $0.5$ requires about $64$.
-
-Adding covariates via ANCOVA reduces the required sample size to
+The **$p$-value** is the probability, under $H_0$, of observing a test statistic at least as extreme as the one realized:
 
 $$
-N_{\text{adj}} = N \cdot (1 - R^2), \tag{6.8}
+p = 2\left[1 - \Phi\left(|T|\right)\right], \tag{6.7}
 $$
 
-where $R^2$ is the share of outcome variance explained by baseline covariates. A covariate explaining $30\%$ of variance is equivalent to a $30\%$ increase in sample size---free power.
+where $\Phi$ is the standard normal CDF. We reject $H_0$ at level $\alpha$ when $p < \alpha$, equivalently when $|T| > z_{1-\alpha/2}$.
+
+**Power** is the probability of *correctly* rejecting $H_0$ when the true effect is $\tau = \delta \neq 0$:
+
+$$
+\text{Power} = 1 - \beta = \mathbb{P}\left(|T| > z_{1-\alpha/2} \;\middle|\; \tau = \delta\right). \tag{6.8}
+$$
+
+Under the alternative, $T \sim \mathcal{N}(\delta / \text{SE}, 1)$. For a two-sided test with equal allocation ($n_T = n_C = N/2$) and $\text{SE} = \sigma\sqrt{4/N}$:
+
+$$
+\text{Power} = \Phi\left(\frac{\delta}{\sigma\sqrt{4/N}} - z_{1-\alpha/2}\right) + \Phi\left(-\frac{\delta}{\sigma\sqrt{4/N}} - z_{1-\alpha/2}\right). \tag{6.9}
+$$
+
+The second term is negligible in practice, so power is approximately $\Phi\left(\delta\sqrt{N}/(2\sigma) - z_{1-\alpha/2}\right)$.
+
+### Sample Size Formula {#sec-rct-power-formula}
+
+Setting the power expression equal to $1 - \beta$ and solving for $N$ gives the required sample size *per group*:
+
+$$
+N_{\text{per group}} = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot \sigma^2}{\delta^2}. \tag{6.10}
+$$
+
+At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$. A standardized effect of $0.2$ ($\delta = 0.2\sigma$) requires roughly $7.84 / 0.04 = 196$ per group; an effect of $0.5$ requires about $32$.
+
+### The Seven-Step Workflow {#sec-rct-power-workflow}
+
+**Step 1. Choose the primary outcome.** A trial may affect many outcomes, but power calculation should be driven by the single outcome you care about most. With multiple primary outcomes, each needs its own power calculation and multiple testing corrections increase sample size requirements.
+
+**Step 2. Estimate outcome variance ($\sigma^2$).** Sources: baseline data, pilot study, or published studies using similar populations and outcomes. If your outcome is agricultural yield, use the standard deviation from a baseline survey or prior studies in the same region. This step is critical---an inaccurate variance estimate cascades through the entire calculation.
+
+**Step 3. Set the expected effect size ($\delta$).** The most judgment-intensive step. Sources: effect sizes from similar interventions in the literature, your own pilot results, or the minimum policy-relevant effect. For example, reading interventions in development economics typically produce effects of $0.1$--$0.3$ standard deviations; $0.2\sigma$ is a reasonable starting point. If you have no prior, work backwards: fix $N$ (from budget constraints), compute the MDE, and ask whether that MDE is plausible.
+
+**Step 4. Set $\alpha$ and desired power.** Convention: $\alpha = 0.05$, power $= 0.80$. High-stakes evaluations sometimes use power $= 0.90$, which increases the required sample by roughly $30\%$.
+
+**Step 5. Adjust for design features.**
+
+- *Cluster randomization*: multiply by the design effect $\text{DEFF}$ (see below)
+- *Covariate adjustment (ANCOVA)*: multiply by $(1 - R^2)$ where $R^2$ is the share of outcome variance explained by baseline covariates
+- *Attrition*: divide by $(1 - a)$ where $a$ is the expected attrition rate
+- *Multiple treatment arms*: each pairwise comparison needs adequate power; total $N$ scales accordingly
+
+**Step 6. Compute.** Combine the formula with adjustments. A worked example:
+
+Suppose $\sigma = 10$, $\delta = 2$, $\alpha = 0.05$, power $= 0.80$:
+
+$$
+N_{\text{per group}} = \frac{(1.96 + 0.84)^2 \times 100}{4} = \frac{784}{4} = 196.
+$$
+
+Total sample: $392$. If you plan to control a baseline covariate with $R^2 = 0.3$, adjust to $196 \times 0.7 = 137$ per group. If you expect $15\%$ attrition, inflate to $137 / 0.85 \approx 161$ per group.
+
+**Step 7. Sensitivity analysis.** Never report a single number. Show how sample size varies under different parameter assumptions. Plot a power curve (sample size on the horizontal axis, power on the vertical) under several effect size scenarios (e.g., $\delta = 1.5, 2.0, 2.5$). This lets you, your PI, and funders assess: *if the true effect is smaller than expected, do we still have adequate power?*
 
 ### Cluster Randomization {#sec-rct-power-cluster}
 
-When randomization is at the cluster level (villages, schools, clinics), within-cluster correlation inflates the required sample. The **design effect** is
+When randomization is at the cluster level, within-cluster correlation inflates the required sample. The **design effect** is
 
 $$
-\text{DEFF} = 1 + (m - 1)\rho, \tag{6.9}
+\text{DEFF} = 1 + (m - 1)\rho, \tag{6.11}
 $$
 
 where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$.
@@ -285,10 +330,28 @@ Even a seemingly small $\rho = 0.05$ with $m = 100$ units per cluster gives $\te
 Given a fixed sample size, the smallest effect detectable at power $1-\beta$ is:
 
 $$
-\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.10}
+\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.12}
 $$
 
 For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
+
+### Worked Example: Mobile Savings in Kenya {#sec-rct-power-example}
+
+You are designing an RCT to evaluate whether SMS savings reminders increase smallholder savings in Kenya. Primary outcome: savings balance at 6 months. From pilot data: $\sigma = 3000$ KES, village-level $\rho = 0.08$. Literature on similar nudge interventions suggests effects of $0.15$--$0.25\sigma$; you conservatively use $\delta = 0.15\sigma = 450$ KES. Plan: cluster randomize at the village level, survey $m = 30$ households per village.
+
+**Baseline (no clustering):**
+
+$$
+N_{\text{per group}} = \frac{7.84 \times 3000^2}{450^2} = \frac{7.84 \times 9{,}000{,}000}{202{,}500} \approx 348.
+$$
+
+**Adjust for clustering:** $\text{DEFF} = 1 + 29 \times 0.08 = 3.32$. Adjusted $N_{\text{per group}} = 348 \times 3.32 \approx 1{,}156$, i.e., $1{,}156 / 30 \approx 39$ villages per arm, $78$ total.
+
+**Adjust for ANCOVA:** controlling baseline savings with $R^2 = 0.4$ reduces to $39 \times 0.6 \approx 24$ villages per arm, $48$ total.
+
+**Adjust for attrition:** with $10\%$ expected attrition, $48 / 0.9 \approx 53$ villages total.
+
+This produces a well-justified sample size recommendation for a grant proposal.
 
 ### Strategies to Increase Power {#sec-rct-power-strategies}
 
@@ -330,7 +393,7 @@ After randomization, report a balance table comparing baseline covariates across
 - Normalized differences (Imbens and Rubin, 2015): more informative than $t$-tests in large samples where even trivial imbalances become "significant"
 
 $$
-\Delta_x = \frac{\bar{X}_T - \bar{X}_C}{\sqrt{(S_T^2 + S_C^2)/2}} \tag{6.11}
+\Delta_x = \frac{\bar{X}_T - \bar{X}_C}{\sqrt{(S_T^2 + S_C^2)/2}} \tag{6.13}
 $$
 
 where $S_T^2$ and $S_C^2$ are the sample variances in treatment and control. Unlike $t$-statistics, $\Delta_x$ does not mechanically grow with $N$. A rule of thumb: $|\Delta_x| > 0.25$ suggests meaningful imbalance that warrants covariate adjustment.
@@ -346,7 +409,7 @@ If imbalance is found: do *not* re-randomize until balance is achieved (this inv
 The simplest regression for an RCT is
 
 $$
-Y_i = \alpha + \tau D_i + \varepsilon_i. \tag{6.12}
+Y_i = \alpha + \tau D_i + \varepsilon_i. \tag{6.14}
 $$
 
 The OLS estimate of $\tau$ is numerically identical to $\bar{Y}_T - \bar{Y}_C$. The regression framework is convenient because it extends naturally to covariates and produces standard errors directly.
@@ -356,7 +419,7 @@ The OLS estimate of $\tau$ is numerically identical to $\bar{Y}_T - \bar{Y}_C$. 
 Adding pre-treatment covariates $X_i$ to the regression does not change the unbiasedness of $\hat{\tau}$ (because $D$ is independent of $X$ by design), but it reduces the residual variance and tightens confidence intervals:
 
 $$
-Y_i = \alpha + \tau D_i + X_i'\beta + \varepsilon_i. \tag{6.13}
+Y_i = \alpha + \tau D_i + X_i'\beta + \varepsilon_i. \tag{6.15}
 $$
 
 Lin (2013) shows that including treatment-covariate interactions $D_i \times (X_i - \bar{X})$ provides robust efficiency gains without relying on correct specification of the covariate model. If randomization was stratified, Freedman (2008) recommends including strata fixed effects for correct inference.
@@ -366,7 +429,7 @@ Lin (2013) shows that including treatment-covariate interactions $D_i \times (X_
 When a baseline measure of the outcome $Y_{i,\text{pre}}$ is available, the ANCOVA specification
 
 $$
-Y_{i,\text{post}} = \alpha + \tau D_i + \gamma Y_{i,\text{pre}} + \varepsilon_i \tag{6.14}
+Y_{i,\text{post}} = \alpha + \tau D_i + \gamma Y_{i,\text{pre}} + \varepsilon_i \tag{6.16}
 $$
 
 controls for the pre-treatment level. McKenzie (2012) shows that ANCOVA is generally more efficient than a difference-in-differences approach when the autocorrelation of the outcome is moderate. The precision gain is equivalent to increasing the sample size by a factor of $1/(1-R^2)$, where $R^2$ is the share of outcome variance explained by the baseline measure.
@@ -393,7 +456,7 @@ Under the monotonicity assumption---no unit does the opposite of its assignment-
 The **Intention-to-Treat** (ITT) effect compares outcomes by *assignment*, regardless of compliance:
 
 $$
-\text{ITT} = \mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]. \tag{6.15}
+\text{ITT} = \mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]. \tag{6.17}
 $$
 
 ITT is always identified under randomization and measures the policy-relevant effect of *offering* a program. With imperfect compliance, ITT is attenuated toward zero relative to the treatment effect on those who actually comply.
@@ -401,7 +464,7 @@ ITT is always identified under randomization and measures the policy-relevant ef
 The **Treatment-on-the-Treated** effect for compliers is recovered by the **Wald estimator**:
 
 $$
-\hat{\tau}_{\text{LATE}} = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]} = \frac{\text{ITT}}{\text{First Stage}}. \tag{6.16}
+\hat{\tau}_{\text{LATE}} = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]} = \frac{\text{ITT}}{\text{First Stage}}. \tag{6.18}
 $$
 
 This is numerically identical to 2SLS using $Z$ as an instrument for $D$ (see [Instrumental Variables](03-iv.qmd)).
@@ -418,7 +481,7 @@ Under RCT.1--RCT.3 plus:
 the Wald estimator identifies the Local Average Treatment Effect (LATE):
 
 $$
-\hat{\tau}_{\text{LATE}} \xrightarrow{p} \mathbb{E}[Y_i(1) - Y_i(0) \mid \text{complier}]. \tag{6.17}
+\hat{\tau}_{\text{LATE}} \xrightarrow{p} \mathbb{E}[Y_i(1) - Y_i(0) \mid \text{complier}]. \tag{6.19}
 $$
 :::
 
