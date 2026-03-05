@@ -79,79 +79,74 @@ where $s_T^2$ and $s_C^2$ are the sample variances in the treatment and control 
 
 ## Experimental Design {#sec-rct-design}
 
-Knowing that randomization identifies the ATE is not enough. *How* you randomize---at what level, with what structure---determines precision, validity, and the estimand itself. The decision tree below summarizes the main choices:
+Knowing that randomization identifies the ATE is not enough. Before running the experiment, three structural decisions must be made: at what *level* to randomize, how to structure the *treatment arms*, and how to *implement* randomization in practice. After randomization, balance must be assessed. This section covers each in turn.
+
+### Level of Randomization {#sec-rct-level}
+
+The first design decision is the unit at which treatment is assigned. The decision tree below guides this choice:
 
 ```{=html}
 <figure style="margin: 1.5em 0;">
 <svg viewBox="0 0 720 390" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto;" font-family="'IBM Plex Sans','Helvetica Neue',sans-serif">
   <!-- Root -->
-  <rect x="190" y="8" width="340" height="44" rx="8" fill="#f8f9fa" stroke="#4a7fb5" stroke-width="2"/>
-  <text x="360" y="36" text-anchor="middle" font-size="14" font-weight="600" fill="#2d2d2d">Can units be independently randomized?</text>
+  <rect x="220" y="8" width="280" height="44" rx="8" fill="#f8f9fa" stroke="#4a7fb5" stroke-width="2"/>
+  <text x="360" y="36" text-anchor="middle" font-size="14" font-weight="600" fill="#2d2d2d">Can units be independently assigned?</text>
 
   <!-- Lines from root -->
-  <line x1="270" y1="52" x2="110" y2="100" stroke="#aaa" stroke-width="1.5"/>
-  <line x1="360" y1="52" x2="360" y2="100" stroke="#aaa" stroke-width="1.5"/>
-  <line x1="450" y1="52" x2="610" y2="100" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="290" y1="52" x2="130" y2="100" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="430" y1="52" x2="590" y2="100" stroke="#aaa" stroke-width="1.5"/>
 
   <!-- Labels on lines -->
-  <text x="178" y="72" text-anchor="middle" font-size="11" fill="#888" font-style="italic">No</text>
-  <text x="374" y="80" text-anchor="start" font-size="11" fill="#888" font-style="italic">Yes</text>
-  <text x="548" y="72" text-anchor="middle" font-size="11" fill="#888" font-style="italic">Constraint</text>
+  <text x="195" y="70" text-anchor="middle" font-size="11" fill="#888" font-style="italic">No (spillovers / group-level treatment)</text>
+  <text x="530" y="70" text-anchor="middle" font-size="11" fill="#888" font-style="italic">Yes</text>
 
   <!-- NO → Cluster -->
-  <rect x="10" y="100" width="200" height="52" rx="8" fill="#e8f4e8" stroke="#4f9a68" stroke-width="1.5"/>
-  <text x="110" y="121" text-anchor="middle" font-size="12" font-weight="600" fill="#2d6b3f">Cluster Randomization</text>
-  <text x="110" y="139" text-anchor="middle" font-size="10" fill="#555">group-level / spillovers</text>
+  <rect x="20" y="100" width="220" height="52" rx="8" fill="#e8f4e8" stroke="#4f9a68" stroke-width="1.5"/>
+  <text x="130" y="121" text-anchor="middle" font-size="12" font-weight="600" fill="#2d6b3f">Cluster Randomization</text>
+  <text x="130" y="139" text-anchor="middle" font-size="10" fill="#555">randomize groups (villages, schools, clinics)</text>
 
   <!-- YES → Sample size? -->
-  <rect x="275" y="100" width="170" height="38" rx="8" fill="#f8f9fa" stroke="#aaa" stroke-width="1.5"/>
-  <text x="360" y="124" text-anchor="middle" font-size="12" font-weight="600" fill="#2d2d2d">Sample size?</text>
-
-  <!-- Constraint → Phase-in -->
-  <rect x="510" y="100" width="200" height="52" rx="8" fill="#f0e8f8" stroke="#7b61a8" stroke-width="1.5"/>
-  <text x="610" y="121" text-anchor="middle" font-size="12" font-weight="600" fill="#5a3d82">Phase-In (Stepped Wedge)</text>
-  <text x="610" y="139" text-anchor="middle" font-size="10" fill="#555">cannot permanently deny treatment</text>
+  <rect x="500" y="100" width="180" height="38" rx="8" fill="#f8f9fa" stroke="#aaa" stroke-width="1.5"/>
+  <text x="590" y="124" text-anchor="middle" font-size="12" font-weight="600" fill="#2d2d2d">Sample size?</text>
 
   <!-- Lines from Sample size -->
-  <line x1="310" y1="138" x2="190" y2="196" stroke="#aaa" stroke-width="1.5"/>
-  <line x1="410" y1="138" x2="510" y2="196" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="540" y1="138" x2="420" y2="196" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="640" y1="138" x2="640" y2="196" stroke="#aaa" stroke-width="1.5"/>
 
   <!-- Labels -->
-  <text x="232" y="166" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Large (N &gt; hundreds)</text>
-  <text x="480" y="166" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Small</text>
+  <text x="462" y="166" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Large (N &gt; hundreds)</text>
+  <text x="660" y="166" text-anchor="start" font-size="10" fill="#888" font-style="italic">Small</text>
 
   <!-- Large → Simple -->
-  <rect x="80" y="196" width="220" height="52" rx="8" fill="#e8f0f8" stroke="#4a7fb5" stroke-width="1.5"/>
-  <text x="190" y="217" text-anchor="middle" font-size="12" font-weight="600" fill="#2d5a8c">Simple Randomization</text>
-  <text x="190" y="235" text-anchor="middle" font-size="10" fill="#555">LLN ensures approximate balance</text>
+  <rect x="310" y="196" width="220" height="52" rx="8" fill="#e8f0f8" stroke="#4a7fb5" stroke-width="1.5"/>
+  <text x="420" y="217" text-anchor="middle" font-size="12" font-weight="600" fill="#2d5a8c">Simple Randomization</text>
+  <text x="420" y="235" text-anchor="middle" font-size="10" fill="#555">LLN ensures approximate balance</text>
 
   <!-- Small → Covariate type? -->
-  <rect x="420" y="196" width="180" height="38" rx="8" fill="#f8f9fa" stroke="#aaa" stroke-width="1.5"/>
-  <text x="510" y="220" text-anchor="middle" font-size="12" font-weight="600" fill="#2d2d2d">Covariate type?</text>
+  <rect x="560" y="196" width="150" height="38" rx="8" fill="#f8f9fa" stroke="#aaa" stroke-width="1.5"/>
+  <text x="635" y="220" text-anchor="middle" font-size="12" font-weight="600" fill="#2d2d2d">Covariate type?</text>
 
   <!-- Lines from Covariate type -->
-  <line x1="460" y1="234" x2="340" y2="300" stroke="#aaa" stroke-width="1.5"/>
-  <line x1="560" y1="234" x2="590" y2="300" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="600" y1="234" x2="460" y2="300" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="670" y1="234" x2="670" y2="300" stroke="#aaa" stroke-width="1.5"/>
 
   <!-- Labels -->
-  <text x="378" y="268" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Discrete covariates</text>
-  <text x="554" y="268" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Continuous / max precision</text>
+  <text x="510" y="268" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Discrete covariates</text>
+  <text x="688" y="268" text-anchor="start" font-size="10" fill="#888" font-style="italic">Continuous / max precision</text>
 
   <!-- Discrete → Stratified -->
-  <rect x="210" y="300" width="240" height="52" rx="8" fill="#fef3e0" stroke="#d4a24c" stroke-width="1.5"/>
-  <text x="330" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#8a6420">Stratified Randomization</text>
-  <text x="330" y="339" text-anchor="middle" font-size="10" fill="#555">block on covariates, randomize within strata</text>
+  <rect x="340" y="300" width="240" height="52" rx="8" fill="#fef3e0" stroke="#d4a24c" stroke-width="1.5"/>
+  <text x="460" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#8a6420">Stratified Randomization</text>
+  <text x="460" y="339" text-anchor="middle" font-size="10" fill="#555">block on covariates, randomize within strata</text>
 
   <!-- Continuous → Pairwise -->
-  <rect x="480" y="300" width="210" height="52" rx="8" fill="#fce8e8" stroke="#b55d5d" stroke-width="1.5"/>
-  <text x="585" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#8c3333">Pairwise Matching</text>
-  <text x="585" y="339" text-anchor="middle" font-size="10" fill="#555">pair similar units, randomize within</text>
+  <rect x="590" y="300" width="120" height="52" rx="8" fill="#fce8e8" stroke="#b55d5d" stroke-width="1.5"/>
+  <text x="650" y="321" text-anchor="middle" font-size="12" font-weight="600" fill="#8c3333">Pairwise</text>
+  <text x="650" y="339" text-anchor="middle" font-size="10" fill="#555">pair &amp; flip within</text>
 </svg>
-<figcaption style="text-align:center;font-size:0.9em;color:#666;margin-top:0.5em;">Randomization design decision tree.</figcaption>
+<figcaption style="text-align:center;font-size:0.9em;color:#666;margin-top:0.5em;">Choosing the level and method of randomization.</figcaption>
 </figure>
 ```
-
-### Unit of Randomization {#sec-rct-unit}
 
 **Individual-level randomization** assigns each person (or firm, or plot) independently. Every unit is its own observation, so statistical power is maximized. The risk is *spillovers*: if treated and control individuals interact (classmates, neighbors, coworkers), SUTVA breaks and the treatment-control contrast is contaminated.
 
@@ -159,14 +154,12 @@ Knowing that randomization identifies the ATE is not enough. *How* you randomize
 
 **Choosing the unit:** Randomize at the level where the treatment operates or below which spillovers are expected. A village-level water system requires village-level randomization. An individual cash transfer with likely intra-household sharing may require household-level randomization.
 
-### Randomization Methods {#sec-rct-randomization-methods}
-
 #### Simple (Pure) Randomization {#sec-rct-simple}
 
 Each unit is independently assigned to treatment with fixed probability $p$:
 
 $$
-D_i \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p). \tag{6.14}
+D_i \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p). \tag{6.3}
 $$
 
 Transparent and easy to verify. The drawback is that group sizes are random ($n_T \sim \text{Binomial}(N, p)$), and in small samples covariate imbalance can occur by chance. Appropriate when $N$ is large (say $N > 500$) and balance is not a primary concern.
@@ -176,7 +169,7 @@ Transparent and easy to verify. The drawback is that group sizes are random ($n_
 Divide the sample into $S$ strata based on pre-treatment covariates (e.g., gender $\times$ region), then randomize independently within each stratum:
 
 $$
-D_i \mid \text{Stratum}_s \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p_s). \tag{6.15}
+D_i \mid \text{Stratum}_s \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p_s). \tag{6.4}
 $$
 
 This guarantees exact balance on the stratification variables and reduces the variance of $\hat{\tau}$. If the stratification covariates explain a fraction $R_S^2$ of the outcome variance, the precision gain is equivalent to multiplying the sample by $1/(1-R_S^2)$.
@@ -205,6 +198,32 @@ Randomize groups rather than individuals. Necessary when:
 
 The cost is substantial: with $J$ clusters of size $m$ and ICC $\rho$, the effective sample size is only $Jm / [1+(m-1)\rho]$. With fixed budget, increasing the number of clusters is almost always more effective than increasing cluster size. See [Power Analysis](#sec-rct-power-cluster) for formulas.
 
+### Treatment Design {#sec-rct-treatment-design}
+
+The second structural decision is how many treatments to test and how they interact.
+
+**Binary treatment** — a single treatment vs. control — is the simplest design and the default for most RCTs. All power is concentrated on one comparison.
+
+**Multiple arms** — when the question is not just *whether* a program works, but *which version* works best (e.g., different dosages, delivery mechanisms, incentive levels). With $K$ treatment arms, there are $K$ pairwise comparisons against control and $\binom{K}{2}$ across-arm comparisons. Each additional arm requires more sample to maintain power, and multiple comparisons inflate the risk of false positives (see [Pre-analysis Plan](#sec-rct-pap)).
+
+**Factorial design** — cross multiple treatments to test interactions. With two binary treatments $A$ and $B$, four groups arise: pure control, $A$ only, $B$ only, $A + B$.
+
+$$
+Y_i = \alpha + \beta_A A_i + \beta_B B_i + \gamma (A_i \times B_i) + \varepsilon_i. \tag{6.5}
+$$
+
+The interaction term $\gamma$ tests whether $A$ and $B$ are complements ($\gamma > 0$) or substitutes ($\gamma < 0$). Power for $\gamma$ is typically low---detecting an interaction requires roughly four times the sample needed for a main effect.
+
+### Implementation in Practice {#sec-rct-implementation}
+
+Even with the structure decided, practical constraints shape how randomization is carried out.
+
+#### Oversubscription {#sec-rct-oversubscription}
+
+The most common implementation strategy in development economics. When demand for a program exceeds supply, randomly select beneficiaries from the eligible pool. Those not selected form the control group.
+
+This is ethically clean---everyone who applies has an equal chance---and provides a natural justification for randomization. The estimand is the effect of *receiving the program among applicants*, which may differ from the population ATE if applicants are a selected sample.
+
 #### Phase-In (Stepped Wedge) Design {#sec-rct-phasein}
 
 All units eventually receive treatment; only the *timing* is randomized. Early recipients serve as treatment, later recipients as control. Ethically appealing because no one is permanently denied the intervention, and politically feasible when the implementing organization plans to scale anyway.
@@ -217,23 +236,104 @@ When mandating treatment is unethical or infeasible, randomize an *encouragement
 
 The randomized encouragement $Z_i$ satisfies the instrument conditions by construction: it is randomly assigned (relevance depends on the encouragement being effective) and plausibly affects outcomes only through take-up (exclusion). The Wald estimator then recovers the LATE for compliers. See [Non-Compliance](#sec-rct-compliance) and [Instrumental Variables](03-iv.qmd).
 
-#### Factorial Design {#sec-rct-factorial}
+---
 
-Cross multiple treatments to test interactions. With two binary treatments $A$ and $B$, four groups arise: pure control, $A$ only, $B$ only, $A + B$.
+## Power Analysis {#sec-rct-power}
+
+An underpowered trial is wasteful: it cannot detect a real effect even if one exists. Power analysis determines the sample size needed to detect a meaningful effect at a given significance level.
+
+### Core Formula {#sec-rct-power-formula}
+
+**Power** is the probability of rejecting $H_0: \tau = 0$ when the true effect is $\tau = \delta$:
 
 $$
-Y_i = \alpha + \beta_A A_i + \beta_B B_i + \gamma (A_i \times B_i) + \varepsilon_i. \tag{6.16}
+\text{Power} = 1 - \beta = \mathbb{P}\left(\text{reject } H_0 \mid \tau = \delta\right). \tag{6.6}
 $$
 
-The interaction term $\gamma$ tests whether $A$ and $B$ are complements ($\gamma > 0$) or substitutes ($\gamma < 0$). Power for $\gamma$ is typically low---detecting an interaction requires roughly four times the sample needed for a main effect.
+For individual-level randomization with equal allocation ($n_T = n_C = N/2$), a continuous outcome, and two-sided test at level $\alpha$:
 
-### Balance Checks {#sec-rct-balance}
+$$
+N = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot 4\sigma^2}{\delta^2}, \tag{6.7}
+$$
+
+where $z_q$ is the $q$-th quantile of the standard normal. At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$, giving $N \approx 16\sigma^2/\delta^2$ per group. A standardized effect of $0.2$ requires roughly $400$ per group; an effect of $0.5$ requires about $64$.
+
+Adding covariates via ANCOVA reduces the required sample size to
+
+$$
+N_{\text{adj}} = N \cdot (1 - R^2), \tag{6.8}
+$$
+
+where $R^2$ is the share of outcome variance explained by baseline covariates. A covariate explaining $30\%$ of variance is equivalent to a $30\%$ increase in sample size---free power.
+
+### Cluster Randomization {#sec-rct-power-cluster}
+
+When randomization is at the cluster level (villages, schools, clinics), within-cluster correlation inflates the required sample. The **design effect** is
+
+$$
+\text{DEFF} = 1 + (m - 1)\rho, \tag{6.9}
+$$
+
+where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$.
+
+Even a seemingly small $\rho = 0.05$ with $m = 100$ units per cluster gives $\text{DEFF} \approx 6$: you need roughly six times as many observations as under individual randomization. When $m$ is large, $N_{\text{eff}} \approx J/\rho$ where $J$ is the number of clusters. The binding constraint is always the number of clusters, not cluster size.
+
+**Typical ICC values** in development economics: health outcomes ($0.01$--$0.05$), education test scores ($0.10$--$0.25$), income ($0.02$--$0.10$).
+
+### Minimum Detectable Effect {#sec-rct-mde}
+
+Given a fixed sample size, the smallest effect detectable at power $1-\beta$ is:
+
+$$
+\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.10}
+$$
+
+For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
+
+### Strategies to Increase Power {#sec-rct-power-strategies}
+
+1. **More clusters** (not more units per cluster) in cluster-randomized trials
+2. **Baseline covariates** via ANCOVA to reduce residual variance
+3. **Stratified randomization** on variables correlated with the outcome
+4. **Multiple follow-up rounds** for panel-data designs
+5. **More precise outcome measures** (administrative data over self-reports)
+
+---
+
+## Pre-analysis Plan {#sec-rct-pap}
+
+A **pre-analysis plan** (PAP) is a document filed before endline data are collected that specifies the hypotheses, outcome variables, subgroup analyses, and regression specifications. The purpose is to prevent *specification searching*---the temptation to mine the data until a significant result appears.
+
+Key elements:
+
+- **Primary outcomes** and how they are constructed (indices, transformations)
+- **Primary specifications** (with and without controls, heterogeneity cuts)
+- **Multiple hypothesis testing correction**: with $K$ hypotheses, the Bonferroni correction tests each at $\alpha/K$; the Benjamini-Hochberg procedure controls the false discovery rate (FDR) at $\alpha$ and is less conservative
+- **Rules for handling attrition, outliers, and missing data**
+
+PAPs are typically registered on the AEA RCT Registry or EGAP. They do not prevent exploratory analysis---but exploratory results should be clearly labelled as such.
+
+::: {.callout-warning}
+## Multiple Hypothesis Testing
+
+With $20$ outcomes tested at the $5\%$ level, expect one spurious rejection by chance. The Bonferroni correction ($\alpha' = 0.05/20 = 0.0025$) is simple but conservative. The Benjamini-Hochberg procedure is standard practice: rank the $p$-values, and reject all hypotheses whose $p$-value $\leq (k/K) \cdot \alpha$, where $k$ is the rank and $K$ is the total number of tests.
+:::
+
+---
+
+## Assessment after Randomization {#sec-rct-balance}
 
 After randomization, report a balance table comparing baseline covariates across treatment and control. Standard practice:
 
 - $t$-tests for each covariate separately
 - An $F$-test (joint test): regress $D_i$ on all baseline covariates and test joint significance
 - Normalized differences (Imbens and Rubin, 2015): more informative than $t$-tests in large samples where even trivial imbalances become "significant"
+
+$$
+\Delta_x = \frac{\bar{X}_T - \bar{X}_C}{\sqrt{(S_T^2 + S_C^2)/2}} \tag{6.11}
+$$
+
+where $S_T^2$ and $S_C^2$ are the sample variances in treatment and control. Unlike $t$-statistics, $\Delta_x$ does not mechanically grow with $N$. A rule of thumb: $|\Delta_x| > 0.25$ suggests meaningful imbalance that warrants covariate adjustment.
 
 If imbalance is found: do *not* re-randomize until balance is achieved (this invalidates inference). Instead, include the imbalanced covariates as controls in the analysis and report the balance table transparently. With $20$ covariates tested at the $5\%$ level, expect one spurious "significant" difference by chance.
 
@@ -246,7 +346,7 @@ If imbalance is found: do *not* re-randomize until balance is achieved (this inv
 The simplest regression for an RCT is
 
 $$
-Y_i = \alpha + \tau D_i + \varepsilon_i. \tag{6.3}
+Y_i = \alpha + \tau D_i + \varepsilon_i. \tag{6.12}
 $$
 
 The OLS estimate of $\tau$ is numerically identical to $\bar{Y}_T - \bar{Y}_C$. The regression framework is convenient because it extends naturally to covariates and produces standard errors directly.
@@ -256,7 +356,7 @@ The OLS estimate of $\tau$ is numerically identical to $\bar{Y}_T - \bar{Y}_C$. 
 Adding pre-treatment covariates $X_i$ to the regression does not change the unbiasedness of $\hat{\tau}$ (because $D$ is independent of $X$ by design), but it reduces the residual variance and tightens confidence intervals:
 
 $$
-Y_i = \alpha + \tau D_i + X_i'\beta + \varepsilon_i. \tag{6.4}
+Y_i = \alpha + \tau D_i + X_i'\beta + \varepsilon_i. \tag{6.13}
 $$
 
 Lin (2013) shows that including treatment-covariate interactions $D_i \times (X_i - \bar{X})$ provides robust efficiency gains without relying on correct specification of the covariate model. If randomization was stratified, Freedman (2008) recommends including strata fixed effects for correct inference.
@@ -266,7 +366,7 @@ Lin (2013) shows that including treatment-covariate interactions $D_i \times (X_
 When a baseline measure of the outcome $Y_{i,\text{pre}}$ is available, the ANCOVA specification
 
 $$
-Y_{i,\text{post}} = \alpha + \tau D_i + \gamma Y_{i,\text{pre}} + \varepsilon_i \tag{6.5}
+Y_{i,\text{post}} = \alpha + \tau D_i + \gamma Y_{i,\text{pre}} + \varepsilon_i \tag{6.14}
 $$
 
 controls for the pre-treatment level. McKenzie (2012) shows that ANCOVA is generally more efficient than a difference-in-differences approach when the autocorrelation of the outcome is moderate. The precision gain is equivalent to increasing the sample size by a factor of $1/(1-R^2)$, where $R^2$ is the share of outcome variance explained by the baseline measure.
@@ -293,7 +393,7 @@ Under the monotonicity assumption---no unit does the opposite of its assignment-
 The **Intention-to-Treat** (ITT) effect compares outcomes by *assignment*, regardless of compliance:
 
 $$
-\text{ITT} = \mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]. \tag{6.6}
+\text{ITT} = \mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]. \tag{6.15}
 $$
 
 ITT is always identified under randomization and measures the policy-relevant effect of *offering* a program. With imperfect compliance, ITT is attenuated toward zero relative to the treatment effect on those who actually comply.
@@ -301,7 +401,7 @@ ITT is always identified under randomization and measures the policy-relevant ef
 The **Treatment-on-the-Treated** effect for compliers is recovered by the **Wald estimator**:
 
 $$
-\hat{\tau}_{\text{LATE}} = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]} = \frac{\text{ITT}}{\text{First Stage}}. \tag{6.7}
+\hat{\tau}_{\text{LATE}} = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]} = \frac{\text{ITT}}{\text{First Stage}}. \tag{6.16}
 $$
 
 This is numerically identical to 2SLS using $Z$ as an instrument for $D$ (see [Instrumental Variables](03-iv.qmd)).
@@ -318,7 +418,7 @@ Under RCT.1--RCT.3 plus:
 the Wald estimator identifies the Local Average Treatment Effect (LATE):
 
 $$
-\hat{\tau}_{\text{LATE}} \xrightarrow{p} \mathbb{E}[Y_i(1) - Y_i(0) \mid \text{complier}]. \tag{6.8}
+\hat{\tau}_{\text{LATE}} \xrightarrow{p} \mathbb{E}[Y_i(1) - Y_i(0) \mid \text{complier}]. \tag{6.17}
 $$
 :::
 
@@ -390,68 +490,6 @@ Miguel and Kremer (2004) document substantial deworming spillovers through schoo
 - **John Henry effect**: Control group compensates by exerting extra effort
 
 Both bias the treatment-control contrast. Placebo treatments, blinded designs, and use of administrative data (rather than self-reports) help mitigate these threats.
-
----
-
-## Power Analysis {#sec-rct-power}
-
-An underpowered trial is wasteful: it cannot detect a real effect even if one exists. Power analysis determines the sample size needed to detect a meaningful effect at a given significance level.
-
-### Core Formula {#sec-rct-power-formula}
-
-**Power** is the probability of rejecting $H_0: \tau = 0$ when the true effect is $\tau = \delta$:
-
-$$
-\text{Power} = 1 - \beta = \mathbb{P}\left(\text{reject } H_0 \mid \tau = \delta\right). \tag{6.9}
-$$
-
-For individual-level randomization with equal allocation ($n_T = n_C = N/2$), a continuous outcome, and two-sided test at level $\alpha$:
-
-$$
-N = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot 4\sigma^2}{\delta^2}, \tag{6.10}
-$$
-
-where $z_q$ is the $q$-th quantile of the standard normal. At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$, giving $N \approx 16\sigma^2/\delta^2$ per group. A standardized effect of $0.2$ requires roughly $400$ per group; an effect of $0.5$ requires about $64$.
-
-Adding covariates via ANCOVA reduces the required sample size to
-
-$$
-N_{\text{adj}} = N \cdot (1 - R^2), \tag{6.11}
-$$
-
-where $R^2$ is the share of outcome variance explained by baseline covariates. A covariate explaining $30\%$ of variance is equivalent to a $30\%$ increase in sample size---free power.
-
-### Cluster Randomization {#sec-rct-power-cluster}
-
-When randomization is at the cluster level (villages, schools, clinics), within-cluster correlation inflates the required sample. The **design effect** is
-
-$$
-\text{DEFF} = 1 + (m - 1)\rho, \tag{6.12}
-$$
-
-where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$.
-
-Even a seemingly small $\rho = 0.05$ with $m = 100$ units per cluster gives $\text{DEFF} \approx 6$: you need roughly six times as many observations as under individual randomization. When $m$ is large, $N_{\text{eff}} \approx J/\rho$ where $J$ is the number of clusters. The binding constraint is always the number of clusters, not cluster size.
-
-**Typical ICC values** in development economics: health outcomes ($0.01$--$0.05$), education test scores ($0.10$--$0.25$), income ($0.02$--$0.10$).
-
-### Minimum Detectable Effect {#sec-rct-mde}
-
-Given a fixed sample size, the smallest effect detectable at power $1-\beta$ is:
-
-$$
-\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.13}
-$$
-
-For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
-
-### Strategies to Increase Power {#sec-rct-power-strategies}
-
-1. **More clusters** (not more units per cluster) in cluster-randomized trials
-2. **Baseline covariates** via ANCOVA to reduce residual variance
-3. **Stratified randomization** on variables correlated with the outcome
-4. **Multiple follow-up rounds** for panel-data designs
-5. **More precise outcome measures** (administrative data over self-reports)
 
 ---
 
