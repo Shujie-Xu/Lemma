@@ -521,7 +521,9 @@ When compliance is low, the denominator of the Wald estimator is small, making L
 
 ---
 
-## Threats to Validity {#sec-rct-threats}
+## Threats to Internal Validity {#sec-rct-threats-internal}
+
+Internal validity asks: *does the estimated effect reflect the true causal impact within this experiment?* Even a well-randomized trial can fail on this dimension.
 
 ### Attrition {#sec-rct-attrition}
 
@@ -552,7 +554,53 @@ Miguel and Kremer (2004) document substantial deworming spillovers through schoo
 - **Hawthorne effect**: Treatment group changes behavior because of being observed, not because of the treatment itself
 - **John Henry effect**: Control group compensates by exerting extra effort
 
-Both bias the treatment-control contrast. Placebo treatments, blinded designs, and use of administrative data (rather than self-reports) help mitigate these threats.
+Both bias the treatment-control contrast in opposite directions: the Hawthorne effect inflates the estimated effect (treatment group improves for non-treatment reasons), while the John Henry effect attenuates it (control group performs better than it otherwise would).
+
+### Placebo Effect {#sec-rct-placebo}
+
+Subjects may improve simply because they *believe* they are receiving an effective treatment, regardless of whether the treatment has any real impact. In medical trials this is well-known, but it also arises in social experiments: participants in a training program may exert more effort because they feel invested in, not because of the training content itself.
+
+**Mitigation:** Use a **placebo arm**---a group that receives an intervention that looks and feels like the real treatment but omits the active ingredient. For example, if testing a financial literacy curriculum, the placebo group receives an equally intensive but unrelated curriculum (health, general knowledge). The treatment effect is then estimated as the difference between the active treatment arm and the placebo arm, isolating the effect of the content from the effect of participation itself.
+
+### Experimenter Demand Effects and Surveyor Bias {#sec-rct-experimenter}
+
+**Experimenter demand effects** arise when subjects infer what the experimenter "wants" and adjust their behavior or survey responses accordingly. If subjects in the treatment group know the experimenter expects the program to work, they may over-report positive outcomes.
+
+**Surveyor bias** occurs when enumerators know which subjects are treated and unconsciously (or consciously) record data differently---probing more for positive responses in the treatment group or coding ambiguous answers favorably.
+
+**Mitigation:**
+
+- **Blinding (single-blind):** Subjects do not know whether they are in treatment or control. Often difficult in social experiments where the treatment is visible (e.g., cash transfers).
+- **Double-blinding:** Neither subjects nor data collectors know assignment status. Feasible when outcomes are measured via administrative data or when treatment and placebo are indistinguishable to surveyors.
+- Use **administrative data** rather than self-reported outcomes where possible
+- Standardize survey protocols and train enumerators to follow scripts strictly
+
+---
+
+## External Validity {#sec-rct-threats-external}
+
+External validity asks: *does the result generalize beyond this experiment?* An RCT with perfect internal validity may still produce results that are specific to the study population, context, or implementation.
+
+### Site and Population Selection {#sec-rct-site-selection}
+
+Most RCTs are conducted in sites that are convenient, cooperative, or have implementing partners---not sites that are representative of the broader population of policy interest. Results from an NGO-led program in western Kenya may not transfer to government-run programs in South Asia.
+
+**Partial remedies:**
+
+- **Multi-site trials**: Run the same intervention in multiple locations and estimate site-specific effects. Heterogeneity across sites directly measures the threat.
+- Report baseline characteristics of the study sample alongside national or regional benchmarks so readers can assess similarity.
+
+### Scalability and General Equilibrium Effects {#sec-rct-scalability}
+
+A program that works at small scale may fail at scale for several reasons:
+
+- **Implementation quality**: NGO-run pilots with highly motivated staff may not replicate under government bureaucracy
+- **General equilibrium effects**: A job training program that raises wages for $500$ participants may depress wages for untrained workers if scaled to $500{,}000$ participants
+- **Cream-skimming**: Pilot programs often enroll the most motivated or accessible beneficiaries; marginal participants at scale may respond differently
+
+### Hawthorne Effects on External Validity {#sec-rct-hawthorne-external}
+
+The Hawthorne effect threatens external validity as well as internal validity: if participants behave differently *because they are in a study*, the measured effect will not persist once the study ends and the extra attention disappears. Using longer follow-up periods and administrative (rather than survey-based) outcomes helps assess whether effects survive beyond the experimental period.
 
 ---
 
