@@ -121,7 +121,7 @@ format:
       light: [cosmo, styles/custom.scss]
       dark: [darkly, styles/custom-dark.scss]
     toc: true
-    toc-depth: 3
+    toc-depth: 2
     number-sections: true
     html-math-method: mathjax
     code-copy: true
