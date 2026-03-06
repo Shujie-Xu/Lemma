@@ -335,6 +335,52 @@ $$
 
 For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
 
+### Quick-Reference Formulas {#sec-rct-power-quick}
+
+Define $Z_{\text{sum}} = z_{1-\alpha/2} + z_{1-\beta}$. The two core formulas for equal-sized groups ($n$ per group) are:
+
+$$
+\boxed{\text{MDE} = Z_{\text{sum}} \times \sqrt{\frac{2\sigma^2}{n}}}, \qquad \boxed{n = \frac{2\,(Z_{\text{sum}} \cdot \sigma)^2}{\text{MDE}^2}}.
+$$
+
+::: {.callout-tip collapse="true"}
+## Expand: $Z_{\text{sum}}$ lookup table and scenario adjustments
+
+**$Z_{\text{sum}}$ lookup table**
+
+|  | Power 80% | Power 90% | Power 95% |
+|---|---|---|---|
+| $\alpha = 0.05$ | 2.80 | 3.24 | 3.60 |
+| $\alpha = 0.01$ | 3.42 | 3.86 | 4.22 |
+| $\alpha = 0.10$ | 2.49 | 2.93 | 3.29 |
+
+**Scenario adjustments: replace $\sigma^2$ with $\sigma^2_{\text{adj}}$**
+
+All adjustments preserve the formula structure---only the variance term changes:
+
+$$
+\text{MDE} = Z_{\text{sum}} \times \sqrt{\frac{2\,\sigma^2_{\text{adj}}}{n}}, \qquad n = \frac{2\,Z_{\text{sum}}^2 \cdot \sigma^2_{\text{adj}}}{\text{MDE}^2}.
+$$
+
+| Scenario | $\sigma^2_{\text{adj}}$ | Note |
+|---|---|---|
+| Baseline | $\sigma^2$ | Raw outcome variance |
+| ANCOVA | $\sigma^2(1-\rho^2)$ | $\rho$ = correlation between $Y$ and covariate |
+| Cluster | $\sigma^2[1+(m-1)\cdot\text{ICC}]$ | $m$ = cluster size |
+| Cluster + ANCOVA | $\sigma^2(1-\rho^2)[1+(m-1)\cdot\text{ICC}]$ | Both adjustments multiply |
+| Unequal allocation | Replace $\frac{2}{n}$ with $\frac{1}{n \cdot \pi(1-\pi)}$ | $\pi$ = treatment share |
+
+**Expanded sample size formulas by scenario:**
+
+| Scenario | $n$ per group |
+|---|---|
+| Baseline | $\dfrac{2\,Z_{\text{sum}}^2\,\sigma^2}{\text{MDE}^2}$ |
+| ANCOVA | $\dfrac{2\,Z_{\text{sum}}^2\,\sigma^2(1-\rho^2)}{\text{MDE}^2}$ |
+| Cluster | $\dfrac{2\,Z_{\text{sum}}^2\,\sigma^2[1+(m-1)\cdot\text{ICC}]}{\text{MDE}^2}$ |
+| Cluster + ANCOVA | $\dfrac{2\,Z_{\text{sum}}^2\,\sigma^2(1-\rho^2)[1+(m-1)\cdot\text{ICC}]}{\text{MDE}^2}$ |
+
+:::
+
 ### Worked Example: Mobile Savings in Kenya {#sec-rct-power-example}
 
 You are designing an RCT to evaluate whether SMS savings reminders increase smallholder savings in Kenya. Primary outcome: savings balance at 6 months. From pilot data: $\sigma = 3000$ KES, village-level $\rho = 0.08$. Literature on similar nudge interventions suggests effects of $0.15$--$0.25\sigma$; you conservatively use $\delta = 0.15\sigma = 450$ KES. Plan: cluster randomize at the village level, survey $m = 30$ households per village.
