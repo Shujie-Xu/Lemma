@@ -272,7 +272,7 @@ $$
 
 The second term is negligible in practice, so power is approximately $\Phi\left(\delta\sqrt{N}/(2\sigma) - z_{1-\alpha/2}\right)$.
 
-### Sample Size Formula {#sec-rct-power-formula}
+### Sample Size and MDE {#sec-rct-power-formula}
 
 Setting the power expression equal to $1 - \beta$ and solving for $N$ gives the required sample size *per group*:
 
@@ -282,58 +282,27 @@ $$
 
 At $\alpha = 0.05$ and $80\%$ power, $(1.96 + 0.84)^2 \approx 7.84$. A standardized effect of $0.2$ ($\delta = 0.2\sigma$) requires roughly $7.84 / 0.04 = 196$ per group; an effect of $0.5$ requires about $32$.
 
-### The Seven-Step Workflow {#sec-rct-power-workflow}
-
-**Step 1. Choose the primary outcome.** A trial may affect many outcomes, but power calculation should be driven by the single outcome you care about most. With multiple primary outcomes, each needs its own power calculation and multiple testing corrections increase sample size requirements.
-
-**Step 2. Estimate outcome variance ($\sigma^2$).** Sources: baseline data, pilot study, or published studies using similar populations and outcomes. If your outcome is agricultural yield, use the standard deviation from a baseline survey or prior studies in the same region. This step is critical---an inaccurate variance estimate cascades through the entire calculation.
-
-**Step 3. Set the expected effect size ($\delta$).** The most judgment-intensive step. Sources: effect sizes from similar interventions in the literature, your own pilot results, or the minimum policy-relevant effect. For example, reading interventions in development economics typically produce effects of $0.1$--$0.3$ standard deviations; $0.2\sigma$ is a reasonable starting point. If you have no prior, work backwards: fix $N$ (from budget constraints), compute the MDE, and ask whether that MDE is plausible.
-
-**Step 4. Set $\alpha$ and desired power.** Convention: $\alpha = 0.05$, power $= 0.80$. High-stakes evaluations sometimes use power $= 0.90$, which increases the required sample by roughly $30\%$.
-
-**Step 5. Adjust for design features.**
-
-- *Cluster randomization*: multiply by the design effect $\text{DEFF}$ (see below)
-- *Covariate adjustment (ANCOVA)*: multiply by $(1 - R^2)$ where $R^2$ is the share of outcome variance explained by baseline covariates
-- *Attrition*: divide by $(1 - a)$ where $a$ is the expected attrition rate
-- *Multiple treatment arms*: each pairwise comparison needs adequate power; total $N$ scales accordingly
-
-**Step 6. Compute.** Combine the formula with adjustments. A worked example:
-
-Suppose $\sigma = 10$, $\delta = 2$, $\alpha = 0.05$, power $= 0.80$:
+The same formula, solved in the other direction, gives the **Minimum Detectable Effect** (MDE)---the smallest effect detectable at power $1-\beta$ given a fixed sample size:
 
 $$
-N_{\text{per group}} = \frac{(1.96 + 0.84)^2 \times 100}{4} = \frac{784}{4} = 196.
+\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.11}
 $$
 
-Total sample: $392$. If you plan to control a baseline covariate with $R^2 = 0.3$, adjust to $196 \times 0.7 = 137$ per group. If you expect $15\%$ attrition, inflate to $137 / 0.85 \approx 161$ per group.
+If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding. When no prior exists for the effect size, work backwards: fix $N$ from budget constraints, compute MDE, and ask whether that MDE is plausible.
 
-**Step 7. Sensitivity analysis.** Never report a single number. Show how sample size varies under different parameter assumptions. Plot a power curve (sample size on the horizontal axis, power on the vertical) under several effect size scenarios (e.g., $\delta = 1.5, 2.0, 2.5$). This lets you, your PI, and funders assess: *if the true effect is smaller than expected, do we still have adequate power?*
-
-### Cluster Randomization {#sec-rct-power-cluster}
-
-When randomization is at the cluster level, within-cluster correlation inflates the required sample. The **design effect** is
-
-$$
-\text{DEFF} = 1 + (m - 1)\rho, \tag{6.11}
-$$
-
-where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$.
+**Cluster adjustment.** When randomization is at the cluster level, within-cluster correlation inflates the required sample. The **design effect** is $\text{DEFF} = 1 + (m - 1)\rho$, where $m$ is the number of units per cluster and $\rho$ is the intra-cluster correlation coefficient (ICC). The effective sample size is $N_{\text{eff}} = N / \text{DEFF}$. Replace $N$ with $N_{\text{eff}}$ in the formulas above.
 
 Even a seemingly small $\rho = 0.05$ with $m = 100$ units per cluster gives $\text{DEFF} \approx 6$: you need roughly six times as many observations as under individual randomization. When $m$ is large, $N_{\text{eff}} \approx J/\rho$ where $J$ is the number of clusters. The binding constraint is always the number of clusters, not cluster size.
 
 **Typical ICC values** in development economics: health outcomes ($0.01$--$0.05$), education test scores ($0.10$--$0.25$), income ($0.02$--$0.10$).
 
-### Minimum Detectable Effect {#sec-rct-mde}
-
-Given a fixed sample size, the smallest effect detectable at power $1-\beta$ is:
+**Intuition: what $\sigma^2_{\text{adj}}$ is doing.** Experimental precision depends on the amount of *effective independent information*. Every adjustment modifies the variance to reflect this:
 
 $$
-\text{MDE} = (z_{1-\alpha/2} + z_{1-\beta}) \cdot \sqrt{\frac{4\sigma^2}{N}}. \tag{6.12}
+\sigma^2_{\text{adj}} = \sigma^2 \times \underbrace{(1-\rho^2)}_{\text{strip known noise (ANCOVA)}} \times \underbrace{[1+(m-1)\cdot\text{ICC}]}_{\text{discount redundant information (clustering)}}
 $$
 
-For clustered designs, replace $N$ with $N_{\text{eff}}$. If the MDE exceeds any plausible effect, the study is underpowered and should be redesigned before proceeding.
+ANCOVA *increases* effective information by explaining away predictable noise; clustering *decreases* it because correlated observations carry less independent signal. When both are present the effects multiply.
 
 ### Quick-Reference Formulas {#sec-rct-power-quick}
 
@@ -380,6 +349,33 @@ $$
 | Cluster + ANCOVA | $\dfrac{2\,Z_{\text{sum}}^2\,\sigma^2(1-\rho^2)[1+(m-1)\cdot\text{ICC}]}{\text{MDE}^2}$ |
 
 :::
+
+### The Seven-Step Workflow {#sec-rct-power-workflow}
+
+**Step 1. Choose the primary outcome.** Power calculation should be driven by the single outcome you care about most. With multiple primary outcomes, each needs its own power calculation and multiple testing corrections increase sample size requirements.
+
+**Step 2. Estimate outcome variance ($\sigma^2$).** Sources: baseline data, pilot study, or published studies using similar populations and outcomes. This step is critical---an inaccurate variance estimate cascades through the entire calculation.
+
+**Step 3. Set the expected effect size ($\delta$).** The most judgment-intensive step. Sources: effect sizes from similar interventions in the literature, your own pilot results, or the minimum policy-relevant effect. If you have no prior, work backwards: fix $N$ (from budget constraints), compute the MDE, and ask whether that MDE is plausible.
+
+**Step 4. Set $\alpha$ and desired power.** Convention: $\alpha = 0.05$, power $= 0.80$. High-stakes evaluations sometimes use power $= 0.90$, which increases the required sample by roughly $30\%$.
+
+**Step 5. Adjust for design features.**
+
+- *Cluster randomization*: multiply $\sigma^2$ by $\text{DEFF}$
+- *Covariate adjustment (ANCOVA)*: multiply $\sigma^2$ by $(1 - \rho^2)$
+- *Attrition*: divide the computed $N$ by $(1 - a)$ where $a$ is the expected attrition rate
+- *Multiple treatment arms*: each pairwise comparison needs adequate power; total $N$ scales accordingly
+
+**Step 6. Compute.** Combine the formula with adjustments. Suppose $\sigma = 10$, $\delta = 2$, $\alpha = 0.05$, power $= 0.80$:
+
+$$
+N_{\text{per group}} = \frac{(1.96 + 0.84)^2 \times 100}{4} = \frac{784}{4} = 196.
+$$
+
+Total sample: $392$. With a baseline covariate $R^2 = 0.3$: $196 \times 0.7 = 137$ per group. With $15\%$ attrition: $137 / 0.85 \approx 161$ per group.
+
+**Step 7. Sensitivity analysis.** Never report a single number. Plot a power curve (sample size on the horizontal axis, power on the vertical) under several effect size scenarios (e.g., $\delta = 1.5, 2.0, 2.5$). This lets you, your PI, and funders assess: *if the true effect is smaller than expected, do we still have adequate power?*
 
 ### Worked Example: Mobile Savings in Kenya {#sec-rct-power-example}
 
